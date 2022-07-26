@@ -1,4 +1,4 @@
-function [schedule_solution] = baseline_schedule(project_para, data_set, cycle)
+function [schedule_solution, constant_variables] = baseline_schedule(project_para, data_set, cycle)
     %baseline_schedule - output Schedule plan
 
     % used parameters
@@ -25,12 +25,17 @@ function [schedule_solution] = baseline_schedule(project_para, data_set, cycle)
     % init local schedule
     local_schedule_plan = local_schedule(project_para, data_set);
 
-    % global schedule
-    [global_schedule_plan, result_saves_all] = global_schedule(project_para, data_set, cpm, forward_set, local_schedule_plan, cycle);
+    %% constant_variables
+    constant_variables.forward_set = forward_set;
+    constant_variables.cpm = cpm;
+    % constant_variables.util_factor = util_factor;
 
-    % schedule_solution = global_schedule_plan;
-    % schedule_solution.util_factor = util_factor;
-    % schedule_solution.original_total_duration = local_schedule_plan.original_total_duration;
+    % global schedule
+    [variables_with_time, conflict_acts_info] = global_schedule(project_para, data_set, constant_variables, local_schedule_plan, cycle);
+
+    schedule_solution.variables_with_time = variables_with_time;%所有时刻的活动执行信息
+    schedule_solution.conflict_acts_info = conflict_acts_info;
+
     % schedule_solution.E
     % schedule_solution.Lgs
     % schedule_solution.resource_assignment;

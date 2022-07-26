@@ -1,4 +1,3 @@
-% function [local_start_time, local_end_time] = genetic_alg(num_j, R, r, d, E, original_local_start_times, original_local_end_times, resource_cate, ad)
 function [local_start_time, local_end_time] = genetic_alg(project_para, data_set, i)
     % related to project L
 

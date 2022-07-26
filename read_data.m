@@ -47,8 +47,8 @@ function [data_set, leave_infos] = read_data(project_para)
         leave_infos = LeaveInfos;
     end
 
-    leave_infos.staff = [1, 2, 3];
-    leave_infos.leave_duration = [2, 4, 3];
-    leave_infos.leave_time = [3, 5, 5];
-
+    leave_infos.leave_staff = [1, 2];
+    leave_infos.leave_duration = [2, 4];
+    leave_infos.leave_time = [3, 5];
+leave_infos.return_time = [5,9];
 end

@@ -1,4 +1,4 @@
-function [temp_variables] = reschedule_local_time(temp_variables, time, forward_set)
+function [temp_variables] = reschedule_local_time(temp_variables, forward_set, time)
     temp_d = temp_variables.d;
     % 活动的开始时间结束时间
     temp_local_start_times = temp_variables.local_start_times;

@@ -108,33 +108,32 @@ for time = 1:T
                 end
                 
                 if released_time == time + 1 % 如果释放时间等于当前时间
-                    temp.Lgs(:, allocated_resource_num) = data_set.Lgs(1:end, allocated_resource_num);
+                   temp.Lgs(:, allocated_resource_num) = data_set.Lgs(1:end, allocated_resource_num);
                     temp.skill_num(1, :) = (sum(temp.Lgs ~= 0, 2))';
                 end
-                
+               
             end
-            % 记录每个时刻剩余的资源序号，该列不全为0的序号为资源序号
-            unallocated_resource_num = find(sum(temp.Lgs, 1) ~= 0);
-            temp.unallocated_resource_num = unallocated_resource_num;
-            temp0{j} = temp;
-            conflict_acts_info{i} = temp0;
-            
+             % 记录每个时刻剩余的资源序号，该列不全为0的序号为资源序号
+             unallocated_resource_num = find(sum(temp.Lgs, 1) ~= 0);
+                temp.unallocated_resource_num = unallocated_resource_num;
         end
-      
         
     end
     
-           
-        iter_variables.APD = APD;
-        iter_variables.makespan = makespan;
-        iter_variables.allocated_set = allocated_set;
-       % save 和时间有关系的变量，需要保存
-        variables_with_time{time} = iter_variables;
-        
     if length(allocated_set) == length(need_global_activity) || max(max(iter_variables.local_start_times)) <= time
-     
+            
+    iter_variables.APD = APD;
+    iter_variables.makespan = makespan;
+    iter_variables.allocated_set = allocated_set;
+    
+    % save 和时间有关系的变量，需要保存
+    variables_with_time{time} = iter_variables;
         break
     end
+    
+    %         allocated_set_with_time{time} = allocated_set;
+
+    
     
     toc
     seq = seq + 1;
