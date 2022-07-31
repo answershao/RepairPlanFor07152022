@@ -1,13 +1,14 @@
-function [timeoff] = parse_timeoff(data_set, timeoff,iter_variables)
+function [timeoff] = parse_timeoff(data_set, timeoff)
 % PARSE_TIMEOFF ´Ë´¦ÏÔÊ¾ÓĞ¹Ø´Ëº¯ÊıµÄÕªÒª
 % ´Ë´¦ÏÔÊ¾ÏêÏ¸ËµÃ÷
 % ·ÖÅä×ÊÔ´%¼ÇÂ¼¸Ã»î¶¯½ØÖ¹µ½¸ÃÊ±¿ÌÒÑ¾­Íê³ÉµÄ¹¤×÷Ê±¼ä¡¢Ê£Óà¹¤×÷Ê±¼ä¡¢ÒÑÍê³ÉµÄ¹¤×÷Á¿¡¢Ê£Óà¹¤×÷Á¿(ĞèÒª¸üĞÂ£©
 GlobalSourceRequest = data_set.GlobalSourceRequest;
 leave_time = timeoff.leave_time;
 skill_value = timeoff.leave_activity_infos.skill_value;
-project_and_activity = timeoff.leave_activity_infos.project_and_activity;
-activity_start_time= timeoff.leave_activity_infos.activity_start_time;
+project_and_activity  = timeoff.leave_activity_infos.project_and_activity;
+activity_start_time =  timeoff.leave_activity_infos.activity_start_time;
 activity_end_time = timeoff.leave_activity_infos.activity_end_time;
+
 
 pro = project_and_activity(1); %ÏîÄ¿ºÅ,µÚ3ÏîÎª¸Ã»î¶¯
 act = project_and_activity(2); %»î¶¯ºÅ
@@ -16,7 +17,7 @@ already_duration = leave_time  -activity_start_time; % ½ØÖ¹µ½¸ÃÊ±¿ÌÒÑ¾­Íê³ÉµÄ¹¤×
 unalready_duration =activity_end_time -  leave_time ; %½ØÖ¹µ½¸ÃÊ±¿ÌÊÜÇë¼ÙÓ°ÏìµÄ»î¶¯µÄÊ£Óà¹¤×÷Ê±¼ä£¨ÓÃÔÚÆÀ·Ö»úÖÆÉÏ£©
 
 already_workload = sum(skill_value) * already_duration; % ½ØÖ¹µ½¸ÃÊ±¿ÌÒÑ¾­Íê³ÉµÄ¹¤×÷Á¿
-unalready_workload = GlobalSourceRequest(pro, act) * iter_variables.d(act, 1, pro) - already_workload; % %½ØÖ¹µ½¸ÃÊ±¿ÌÊ£Óà¹¤×÷Á¿
+unalready_workload = GlobalSourceRequest(pro, act) * data_set.d(act, 1, pro) - already_workload; % %½ØÖ¹µ½¸ÃÊ±¿ÌÊ£Óà¹¤×÷Á¿
 
 timeoff.leave_activity_infos.pro = pro;
 timeoff.leave_activity_infos.act = act;

@@ -55,10 +55,9 @@ for cycle = 1:project_para.cycles
     [data_set, leave_infos] = read_data(project_para);
     % schedule_solution: start_time, end_time, resource_assignment
     [schedule_solution, constant_variables] = baseline_schedule(project_para, data_set, cycle);
-    % global_schedule_plan = prepare_global_schedule_resource(project_para, schedule_solution, leave_infos); %找到第一次请假时刻的信息
     % schedule_solution.variables_with_time = variables_with_time;%所有时刻的活动执行信息
     % schedule_solution.conflict_acts_info = conflict_acts_info;%每个时刻活动分配资源的信息
-    %constant_variables 基线调度计划中生成的定量，一旦生成均不变
+    % constant_variables 基线调度计划中生成的定量，一旦生成均不变
 
     %%计算员工工作时间的偏差=修复后每个员工工作时间-修复前每个工作时间
     % output :
@@ -78,10 +77,6 @@ for cycle = 1:project_para.cycles
 
     % constant_variables
 
-    % global_schedule_plan
-    % original_variables = schedule_solution.variables_with_time; %time开始，所有活动信息
-    conflict_acts_info = schedule_solution.conflict_acts_info; %单个活动分配信息
-    
     % iter_variables.R = global_schedule_plan.R; % 局部资源可用量
     % iter_variables.d = global_schedule_plan.d; % 工期变化储存
     % iter_variables.Lgs = global_schedule_plan.Lgs;
@@ -89,98 +84,108 @@ for cycle = 1:project_para.cycles
     % iter_variables.local_start_times = global_schedule_plan.local_start_times; %初始局部开始时间
     % iter_variables.local_end_times = global_schedule_plan.local_end_times; %初始局部结束时间
     % iter_variables.allocated_acts_information = global_schedule_plan.allocated_acts_information;
-
     % iter_variables.resource_num = global_schedule_plan.resource_num;
     % iter_variables.makespan = global_schedule_plan.makespan;
     % iter_variables.APD = global_schedule_plan.APD;
     % iter_variables.resource_worktime = schedule_solution.result_saves_all{2}; % 储存每个员工的工作时间
 
-    %从基线计划开始就应该建立技能-资源-时间矩阵， 若在修复计划中找到请假时刻，则调取该时刻的技能-资源信息
-    %类似
-    %        for t = 1:T
-    %        iter_variables.Lgs_alltime(:, :, t) =  iter_variables.Lgs;
-    %     end
+    % schedule_solution
+    % time开始，所有活动信息 单个活动分配信息
+    % iter_schedule_solution.variables_with_time;%R,d,start,end,APD,makespan, allocated_set
+    % Lgs,skill_num,resource_worktime,skill_value,allocated_resource_num,project_and_activity,start,end,unallocated_resource_num
 
-    conflict_acts_info.allocated_acts_information = all_act_infos(schedule_solution);
+    % iter
+    iter_schedule_solution = schedule_solution;
+    % iter_schedule_solution.variables_with_time
+    % iter_schedule_solution.conflict_acts_info
+    iter_schedule_solution.allocated_acts_information = all_act_infos(iter_schedule_solution);
+    iter_schedule_solution.allocated_variables_information = all_variables_infos(iter_schedule_solution);
 
-    % repair plan
+    iter_variables_with_time = iter_schedule_solution.variables_with_time;
+    iter_conflict_acts_info = iter_schedule_solution.conflict_acts_info; % 内存储的9个变量+performing_time
+    iter_allocated_acts_information = iter_schedule_solution.allocated_acts_information; %根据活动顺序排的，后需要遍历执行时间
+    iter_allocated_variables_information = iter_schedule_solution.allocated_variables_information; %已根据时间顺序排好了
+
+    %% repair plan
     for time = 1:project_para.T
-        %1.是否为返回时间点，更新Lgs，skill_num,
-        [~, index_return] = ismember(time, leave_infos.return_time);
-
-        if index_return ~= 0 %说明该time是员工返回时刻
-            timeoff.return_time = leave_infos.return_time(index_return);
-            timeoff.return_staff = leave_infos.leave_staff(index_return); %员工的请假和返回，配对出现，即哪个员工走对应矩阵上的哪个员工便在一定时间返回
-
-            %遍历找返回时刻的活动信息
-            for i = 1:length(conflict_acts_info.allocated_acts_information)
-                eachtime_act_info = conflict_acts_info.allocated_acts_information{i};
-
-                if eachtime_act_info.performing_time == timeoff.return_time %找到了返回时刻的活动信息
-                    %员工复职
-                    eachtime_act_info.Lgs(:, timeoff.return_staff) = data_set.Lgs(1:end, timeoff.return_staff);
-                    eachtime_act_info.skill_num(1, :) = (sum(eachtime_act_info.Lgs ~= 0, 2))';
-                    conflict_acts_info.allocated_acts_information{i} = eachtime_act_info;
-                end
-
-            end
-
-        end
-
-        % 2.是否为请假点 ，先更新Lgs,skill_num, 后续策略中更新allocated_set
+        % 1 更新资源
+        % 1.1 请假
+        % 是否为请假点 ，先更新Lgs,skill_num, 后续策略中更新allocated_set
         [~, index_leave] = ismember(time, leave_infos.leave_time);
         %%  找请假时刻
         if index_leave ~= 0 %说明该time是请假时刻
             timeoff.leave_time = leave_infos.leave_time(index_leave);
             timeoff.leave_staff = leave_infos.leave_staff(index_leave);
             timeoff.leave_duration = leave_infos.leave_duration(index_leave);
+            timeoff.return_time = leave_infos.return_time(index_leave);
 
-            %遍历请假时刻的活动信息
-            for i = 1:length(conflict_acts_info.allocated_acts_information)
-                eachtime_act_info = conflict_acts_info.allocated_acts_information{i};
+            %% save请假时刻正在执行的活动信息和请假员工在执行的活动信息
+            [timeoff, performing_acts_infos] = find_staff_doing_activity(iter_allocated_variables_information, iter_allocated_acts_information, timeoff);
+            timeoff = parse_timeoff(data_set, timeoff); %请假时刻请假员工在执行的活动信息
+            performing_acts_infos = parse_performing_acts(data_set, performing_acts_infos, time);
 
-                if eachtime_act_info.performing_time == timeoff.leave_time %找到了返回时刻的活动信息
-                    %整个请假时长均要更新Lgs,skill_num
-                    %员工请假
-                    eachtime_act_info.Lgs(:, timeoff.leave_staff) = 0;
-                    eachtime_act_info.skill_num = (sum(eachtime_act_info.Lgs ~= 0, 2))';
-                    conflict_acts_info.allocated_acts_information{i} = eachtime_act_info;
-                end
-
-            end
-
-            % 可能是多个值
-            [timeoff, performing_acts_infos] = find_staff_doing_activity(iter_variables, timeoff, time); %请假时刻的资源及活动信息
-            timeoff = parse_timeoff(data_set, timeoff, iter_variables);
-
-            % timeoff
-            pro = timeoff.leave_activity_infos.pro;
+            pro = timeoff.leave_activity_infos.pro; %员工请假离开后， 活动的剩余工期需要更新
             act = timeoff.leave_activity_infos.act;
 
-            %每次活动一有请假员工出现，该活动的开始时间便自动更新为请假时刻，方便后续直接引用repair_scheduling
-            if iter_variables.skill_num(data_set.skill_cate(pro, act)) >= 1
-                [iter_variables] = update_allocate_resource(data_set, iter_variables, timeoff, time);
-                %若请假员工离开后，同时通过闲置资源，让活动继续执行，则 当前时刻的allocated_set无需更新
-            else
-                %% 2.1 若闲置资源不可用，则采取动态策略
-                %策略一:推至下一时刻继续判断+基线调度计划
-                [iter_variables1, objective1] = wait_for_sloving(project_para, data_set, original_variables, conflict_acts_info, iter_variables, constant_variables, timeoff);
-                % 2.2 策略二:所有活动暂停, 记录所有活动的资源基本信息：工作时间、剩余工作时间、已完成的工作量、剩余工作量、技能需求量
-                [iter_variables2, objective2] = adjust_solving(pro, act, project_para, data_set, iter_variables, timeoff, global_schedule_plan, performing_acts_infos);
-                %给冲突活动按照softmax机制,资源指派按照hl&ln规则
-                if objective1 < objective2
-                    iter_variables = iter_variables1;
-                else
-                    iter_variables = iter_variables2;
-                end
+            iter_variables.R = iter_allocated_variables_information{timeoff.leave_time}.R;
+            iter_allocated_variables_information{timeoff.leave_time}.d(act, :, pro) = timeoff.leave_activity_infos.unalready_duration;
+            iter_variables.d = iter_allocated_variables_information{timeoff.leave_time}.d; %员工请假离开后， 活动的剩余工期需要更新
+            iter_variables.local_start_times = iter_allocated_variables_information{timeoff.leave_time}.local_start_times;
+            iter_variables.local_end_times = iter_allocated_variables_information{timeoff.leave_time}.local_end_times;
+            iter_variables.allocated_set = iter_allocated_variables_information{timeoff.leave_time}.allocated_set;
+            iter_variables.objective = iter_allocated_variables_information{timeoff.leave_time}.objective;
+            iter_variables.makespan = iter_allocated_variables_information{timeoff.leave_time}.makespan;
+            iter_variables.Lgs = iter_allocated_variables_information{timeoff.leave_time}.Lgs;
+            iter_variables.skill_num = iter_allocated_variables_information{timeoff.leave_time}.skill_num; %技能可用量
+            iter_variables.resource_worktime = iter_allocated_variables_information{timeoff.leave_time}.resource_worktime;
 
-            end
+            %% 2.1 若闲置资源不可用，则采取动态策略
+            %             %策略一:推至下一时刻继续判断+基线调度计划
+            %              [temp_schedule_solution1,objective1] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, iter_variables_with_time(1:timeoff.leave_time-1), iter_conflict_acts_info(1:timeoff.leave_time));
+            %              temp_schedule_solution = temp_schedule_solution1;%假设第一个策略好，传出了第一个策略
+            %             iter_schedule_solution = temp_schedule_solution;
+            %% 2.2 策略二:所有活动暂停, 从活动未完成部分开始
+            [temp_schedule_solution2, objective2] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, iter_variables_with_time(1:timeoff.leave_time - 1), iter_conflict_acts_info(1:timeoff.leave_time));
+            temp_schedule_solution = temp_schedule_solution2; %假设第一个策略好，传出了第一个策略
+            iter_schedule_solution = temp_schedule_solution;
 
-            % 当前时刻不是请假时刻，应该循环到下一时刻
-            % iter_variables = iter_variables1;
+            % if objective1 < objective2
+            %     temp_schedule_solution = ?;
+            % else
+            %     temp_schedule_solution = ?;
+            % end
 
         end
+
+        iter_schedule_solution.allocated_acts_information = all_act_infos(iter_schedule_solution);
+        iter_schedule_solution.allocated_variables_information = all_variables_infos(iter_schedule_solution);
+
+        iter_conflict_acts_info = iter_schedule_solution.conflict_acts_info; % 内存储的9个变量+performing_time
+        iter_allocated_acts_information = iter_schedule_solution.allocated_acts_information; %根据活动顺序排的，后需要遍历执行时间
+        iter_allocated_variables_information = iter_schedule_solution.allocated_variables_information; %已根据时间顺序排好了
 
     end
 
 end
+
+% 1.2 返回
+%1.是否为返回时间点，更新Lgs，skill_num,
+%         [~, index_return] = ismember(time, leave_infos.return_time);
+%
+%         if index_return ~= 0 %说明该time是员工返回时刻
+%             timeoff.return_time = leave_infos.return_time(index_return);
+%             timeoff.return_staff = leave_infos.leave_staff(index_return); %员工的请假和返回，配对出现，即哪个员工走对应矩阵上的哪个员工便在一定时间返回
+%
+%             %遍历找返回时刻的活动信息
+%             for i = 1:length(iter_allocated_acts_information)
+%                 eachtime_act_info = iter_allocated_acts_information{i};
+%
+%                 if eachtime_act_info.performing_time == timeoff.return_time %找到了返回时刻的活动信息
+%                     %员工复职
+%                     eachtime_act_info.Lgs(:, timeoff.return_staff) = data_set.Lgs(1:end, timeoff.return_staff);
+%                     eachtime_act_info.skill_num(1, :) = (sum(eachtime_act_info.Lgs ~= 0, 2))';
+%                     iter_allocated_acts_information{i} = eachtime_act_info;
+%                 end
+%
+%             end
+%

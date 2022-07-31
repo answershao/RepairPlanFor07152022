@@ -1,40 +1,38 @@
-function [timeoff, performing_acts_infos] = find_staff_doing_activity(iter_variables, timeoff, time)
-%FIND_STAFF_DOING_ACTIVITY 此处显示有关此函数的摘要
-[~, index] = ismember(timeoff.leave_staff, iter_variables.resource_num); % index为请假员工的位置，判断请假员工是否是闲置员工
+function [timeoff, performing_acts_infos] = find_staff_doing_activity(iter_allocated_variables_information,iter_allocated_acts_information, timeoff)
 
-% activity_num = 1;
-if index == 0 %说明请假员工当前在执行活动
-    % 2.找到该员工当前时刻time时正在执行的活动集合, global_schedule_plan中找,
-    % 2.1找到所有的活动执行时刻的信息
-    allocated_acts_information = iter_variables.allocated_acts_information;
-    % 2.2 找到time 时刻正在执行的活动
-    
-    % all_time_infos = allocated_acts_information(:, 6); %第六项-所有时间time列出
-    performing_acts_infos = {}; %储存time时刻正在执行的活动信息
-    count = 0;
-    
-    for time_order = 1:length(allocated_acts_information)
-        each_act_information =  allocated_acts_information{time_order};%每个时刻每个活动的执行信息
-        if each_act_information.performing_time == time %若相等,记录行数time_order
-            count = count + 1;
-            performing_acts_infos{count} = each_act_information;%time 时刻正在执行所有活动的信息
-            %找请假时刻请假员工正在执行的活动信息
-            [~, index5] = ismember(timeoff.leave_staff, each_act_information.allocated_resource_num); %资源序号,判断请假员工是否属于执行一员,若是,找出该活动
+count = 0;
+performing_acts_infos = {}; %储存time时刻正在执行的活动信息
+
+eachtime_variables_info = iter_allocated_variables_information{timeoff.leave_time}; %请假时刻的剩余信息
+
+for i = 1:length(iter_allocated_acts_information)
+    eachtime_acts_info = iter_allocated_acts_information{i};
+
+      %遍历请假时刻的活动信息
+    if eachtime_acts_info.performing_time == timeoff.leave_time %找到了请假时刻的活动信息
+        %         1.先记录time 时刻正在执行所有活动的信息
+        count = count + 1;
+        performing_acts_infos{count} = eachtime_acts_info;
+        
+        %2.再找请假时刻请假员工正在执行的活动信息
+        %2.1请假时并未在执行活动,更新Lgs,skill_num
+        if eachtime_variables_info.Lgs(:,timeoff.leave_staff)~=0 %请假员工列b不为0，说明请假时并未在执行活动，更新Lgs,skill_num
+            eachtime_variables_info.Lgs(:, timeoff.leave_staff) = 0;
+            eachtime_variables_info.skill_num = (sum(eachtime_variables_info.Lgs ~= 0, 2))';
+        else %2.2请假时在执行活动的信息
+
+           timeoff.leave_activity_infos.skill_value = eachtime_acts_info.skill_value;
+            timeoff.leave_activity_infos.allocated_resource_num = eachtime_acts_info.allocated_resource_num;
+         timeoff.leave_activity_infos.project_and_activity = eachtime_acts_info.project_and_activity;
+          timeoff.leave_activity_infos.activity_start_time = eachtime_acts_info.activity_start_time;
+         timeoff.leave_activity_infos.activity_end_time = eachtime_acts_info.activity_end_time;
+          timeoff.leave_activity_infos.performing_time = eachtime_acts_info.performing_time;
+%             break
             
-            if index5 ~= 0 % 说明请假员工在执行该活动
-                %time时刻请假员工所在活动的基本信息
-                timeoff.leave_activity_infos.skill_value = each_act_information.skill_value;
-                timeoff.leave_activity_infos.allocated_resource_num = each_act_information.allocated_resource_num;
-                timeoff.leave_activity_infos.project_and_activity = each_act_information.project_and_activity;
-                timeoff.leave_activity_infos.activity_start_time = each_act_information.activity_start_time;
-                timeoff.leave_activity_infos.activity_end_time = each_act_information.activity_end_time;
-                timeoff.leave_activity_infos.performing_time = each_act_information.performing_time;
-                break
-            end
         end
         
     end
+end
     
-end
-
-end
+    
+    %             timeoff.unallocated_resource_num = eachtime_act_info.unallocated_resource_num

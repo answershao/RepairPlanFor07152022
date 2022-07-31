@@ -1,4 +1,4 @@
-function [temp_schedule_solution,objective] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, variables_with_time,conflict_acts_info)
+function      [temp_schedule_solution,objective] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff,performing_acts_infos, variables_with_time,conflict_acts_info)
 % project_para
 L = project_para.L;
 num_j = project_para.num_j;
@@ -13,26 +13,32 @@ leave_staff = timeoff.leave_staff;
 
 
 %constant_variables
-cpm = constant_variables.cpm;
+cpm = constant_variables.cpm;                                                                                                                                                                                                      
 CPM = cpm.CPM;
 forward_set = constant_variables.forward_set;
 
-
-
 seq = 0;
 need_global_activity = find_need_global(GlobalSourceRequest);
+
+%准备工作
+%leave_time时刻请假活动先分配资源
+%if闲置资源不足，该时刻所有活动未完成部分更新（开始结束时间、未完成的工期，未完成的工作量），调出，根据cur_conflict重新分配资源，再根据othertime_allocate
+%other_time,直接othertime_allocate_resource
+
+
 
 for time = leave_time:T
     % 策略一（等待调度）的资源分配，该活动的开始时间便自动更新为请假时刻，方便后续直接引用repair_scheduling
     sprintf('策略一， 前循环:%d-%d', seq + 1, time)
     if time == leave_time
-       [temp_variables, conflict_acts_info] = waitfor_leavetime_schedule(project_para,data_set, iter_variables, conflict_acts_info,timeoff, forward_set, time);
+        [temp_variables, conflict_acts_info] = adjust_leavetime_schedule(project_para,data_set, iter_variables, conflict_acts_info,timeoff, performing_acts_infos,forward_set,cpm, time);
     end
     if time ~= leave_time
-       [temp_variables, conflict_acts_info] = waitfor_othertime_schedule(project_para,data_set, iter_variables,conflict_acts_info, timeoff, forward_set,need_global_activity,cpm, time);
+    [temp_variables, conflict_acts_info] = adjust_othertime_schedule(project_para,data_set, iter_variables, conflict_acts_info,performing_acts_infos, forward_set,need_global_activity,cpm, time);
     end
-
-    %% 七.资源释放与返工
+    
+    
+     %% 七.资源释放与返工
     
     for i = 1:length(conflict_acts_info)
         temp0 = conflict_acts_info{i};
@@ -120,38 +126,6 @@ for time = leave_time:T
     toc
     seq = seq + 1;
 end
-
-%     [~, index_return] = ismember(time, return_time);
-%
-%     if index_return ~= 0 %说明该time是员工返回时刻
-%         timeoff.return_time = return_time(index_return);
-%         timeoff.leave_staff = leave_staff(index_return); %员工的请假和返回，配对出现，即哪个员工走对应矩阵上的哪个员工便在一定时间返回
-%
-%         % 遍历找返回时刻的活动信息
-%
-%         for i = 1:length(allocated_acts_information)
-%             eachtime_act_info = allocated_acts_information{i};
-%
-%             if eachtime_act_info.performing_time == timeoff.return_time %找到了返回时刻的活动信息
-%                 %员工复职
-%                 eachtime_act_info.Lgs(:, timeoff.leave_staff) = data_set.Lgs(1:end, timeoff.leave_staff);
-%                 eachtime_act_info.skill_num(1, :) = (sum(eachtime_act_info.Lgs ~= 0, 2))';
-%                 allocated_acts_information{i} = eachtime_act_info;
-%             end
-%
-%         end
-%
-%     end
-
-%放最后计算
+   
 
 
-%
-% finally_start_times = temp_variables.local_start_times - 1;
-%             finally_end_times = temp_variables.local_end_times - 1;
-%             makespan = max(finally_end_times, [], 2);
-%             APD = sum(makespan - ad' - CPM') / L; %1.平均项目延期
-%
-% objective_act = APD + abs(finally_start_times - iter_variables.local_start_times) / L; %修复目标值f1：与活动有关
-% objective_staff = abs(conflict_act_info. .resource_worktime - timeoff.resource_worktime); %修复目标值f2：资源工作时间之和偏差，找iter_variables.resource_worktime？
-% objective = (1/2) * objective_act + (1/2) * objective_staff;

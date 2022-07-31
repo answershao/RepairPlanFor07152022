@@ -1,4 +1,4 @@
-function [cur_need_global_activity] = find_cur_need_global_activity(iter_variables, NeedGlobal, time, allocated_set)
+function [cur_need_global_activity] = find_cur_need_global_activity(iter_variables, NeedGlobal, time, allocated_set )
     local_start_times = iter_variables.local_start_times;
 
     % —∞’“L2

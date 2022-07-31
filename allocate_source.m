@@ -1,4 +1,4 @@
-function [temp_variables, conflict_acts_info] = allocate_source(data_set, iter_variables, conflict_act,cur_conflict, time)
+function [temp_variables, conflict_acts_info] = allocate_source(data_set, iter_variables,cur_conflict, time)
 % 函数功能�? 1种顺序的资源分配
 % skill_number = [];%�?能�??
 % allocated_resource_num = [];%执行该活动的资源序号
@@ -10,10 +10,11 @@ temp_d = iter_variables.d;
 temp_local_start_times = iter_variables.local_start_times;
 temp_local_end_times = iter_variables.local_end_times;
 
-temp_Lgs = conflict_act.Lgs;
-temp_skill_num = conflict_act.skill_num;
-temp_resource_worktime = conflict_act.resource_worktime;
+temp_Lgs = iter_variables.Lgs;
+temp_skill_num = iter_variables.skill_num;
+temp_resource_worktime = iter_variables.resource_worktime;
 
+conflict_act = {};
 conflict_acts_info = {};
 people = length(temp_resource_worktime);
 skill_distribution = [];
@@ -57,9 +58,7 @@ for v = 1:length(cur_conflict) % 遍历冲突列表中每个数�?
         conflict_act.project_and_activity = [i, j];
         conflict_act.activity_start_time = temp_local_start_times(i, j);
         conflict_act.activity_end_time = temp_local_end_times(i, j);
-        conflict_act.Lgs = temp_Lgs;
-        conflict_act.skill_num = temp_skill_num;
-        conflict_act.resource_worktime = temp_resource_worktime;
+        
         conflict_acts_info{v} = conflict_act;
         
     else
@@ -76,5 +75,8 @@ temp_variables.d = temp_d;
 temp_variables.local_start_times = temp_local_start_times;
 temp_variables.local_end_times = temp_local_end_times;
 
+temp_variables.Lgs = temp_Lgs;
+temp_variables.skill_num = temp_skill_num;
+temp_variables.resource_worktime = temp_resource_worktime;
 
 end
