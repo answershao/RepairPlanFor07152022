@@ -10,7 +10,7 @@ function [cur_conflict] = find_cur_conflict(data_set, iter_variables, cur_need_g
 
     duration = zeros(1, length(cur_need_global_activity)); %计划工期�? %实际剩余工期,以上次更新的调度计划为准
     slacktime = zeros(1, length(cur_need_global_activity)); %计划松弛时间 %实际松弛时间，以上次更新的调度计划为�?
-    reqireskill = zeros(1, length(cur_need_global_activity)); %储存全局资源�?求量�?
+    requireskill = zeros(1, length(cur_need_global_activity)); %储存全局资源�?求量�?
     lateract = zeros(1, length(cur_need_global_activity)); %紧后活动个数
 
     for x = 1:length(cur_need_global_activity) %遍历cur_need_global_activity中每个数�?
@@ -19,7 +19,7 @@ function [cur_conflict] = find_cur_conflict(data_set, iter_variables, cur_need_g
         duration(x) = iter_d(activity, :, program); %对活动工期， 1-softmax
         %找松弛时间TS
         slacktime(x) = slst(program, activity);
-        reqireskill(x) = GlobalSourceRequest(program, activity); %对技能需求量�? 1-softmax
+        requireskill(x) = GlobalSourceRequest(program, activity); %对技能需求量�? 1-softmax
         %找紧后活动个数E
         lateract(x) = sum(E(activity, :, program) ~= 0); %紧后活动个数，softmax
 
@@ -32,7 +32,7 @@ function [cur_conflict] = find_cur_conflict(data_set, iter_variables, cur_need_g
     softmax = zeros(1, length(duration)); %记录每个活动�?4类softmax值之和，三个1-softmax,�?个softmax
 
     for i = 1:length(duration)
-        activity(i, :) = [exp(duration(i)), exp(slacktime(i)), exp(reqireskill(i)), exp(lateract(i))];
+        activity(i, :) = [exp(duration(i)), exp(slacktime(i)), exp(requireskill(i)), exp(lateract(i))];
         %activity(i,:) = [exp(duration(i)), exp(reqireskill(i)),exp(lateract(i))];
     end
 

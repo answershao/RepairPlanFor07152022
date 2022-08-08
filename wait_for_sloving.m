@@ -90,20 +90,13 @@ for time = leave_time:T
         temp_variables.skill_num(1, :) = (sum(temp_variables.Lgs ~= 0, 2))';
     end
     
-    if length(temp_variables.allocated_set) == (num_j * L) || max(max(temp_variables.local_start_times)) <= time
-        break
-    end
-    
-    % 记录每个时刻剩余的资源序号，该列不全为0的序号为资源序号
-    %     unallocated_resource_num = find(sum(iter_variables.Lgs, 1) ~= 0);
-    
-    finally_start_times = temp_variables.local_start_times - 1;
+      finally_start_times = temp_variables.local_start_times - 1;
     finally_end_times = temp_variables.local_end_times - 1;
     makespan = max(finally_end_times, [], 2);
     APD = sum(makespan - ad' - CPM') / L; %1.平均项目延期
     
-    objective_act = APD + sum(sum(abs(temp_variables.local_start_times - iter_variables.local_start_times))) / L; %修复目标值f1：与活动有关
-    objective_staff = sum(sum(abs(temp_variables.resource_worktime - iter_variables.resource_worktime)))/project_para.people; %修复目标值f2：资源工作时间之和偏差，找iter_variables.resource_worktime？
+    objective_act = APD + sum(sum(abs(finally_start_times  - (iter_variables.local_start_times-1)))) / L; %修复目标值f1：与活动有关
+    objective_staff = sum(abs(temp_variables.resource_worktime - iter_variables.resource_worktime))/project_para.people; %修复目标值f2：资源工作时间之和偏差，找iter_variables.resource_worktime？
     objective = (1/2) * objective_act + (1/2) * objective_staff;
     
     iter_variables = temp_variables;
@@ -117,6 +110,15 @@ for time = leave_time:T
     
     temp_schedule_solution.conflict_acts_info = conflict_acts_info;
     temp_schedule_solution.variables_with_time = variables_with_time;
+    
+    
+    if length(temp_variables.allocated_set) == length(need_global_activity)|| max(max(temp_variables.local_start_times)) <= time
+        break
+    end
+    
+    % 记录每个时刻剩余的资源序号，该列不全为0的序号为资源序号
+    %     unallocated_resource_num = find(sum(iter_variables.Lgs, 1) ~= 0);
+
     toc
     seq = seq + 1;
 end

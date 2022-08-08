@@ -29,7 +29,7 @@ conflict_acts_info = {};
   [~,index_other_staff] = find(timeoff.leave_activity_infos.allocated_resource_num'~=timeoff.leave_staff);
     other_staff = timeoff.leave_activity_infos.allocated_resource_num(index_other_staff)';%基线中剩余的员工
 
-if iter_variables.skill_num(skill_cate(pro, act)) >= 1 %闲置资源满足，可分配，则当前时刻的allocated_set无需更新
+if temp_skill_num(skill_cate(pro, act)) >= 1 %闲置资源满足，可分配，则当前时刻的allocated_set无需更新
     lgs_1 = temp_Lgs(skill_cate(pro, act), :); %????????
     
     for resource = 1:people
