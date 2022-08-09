@@ -26,7 +26,7 @@ for v = 1:length(cur_conflict) % 閬嶅巻鍐茬獊鍒楄〃涓?姣忎釜鏁扮??
     pro = cur_conflict{1, v}(1, 1);
     act = cur_conflict{1, v}(1, 2);
     
-    if iter_variables.skill_num(skill_cate(pro, act)) >= GlobalSourceRequest(pro, act) %闲置资源满足，可分配，则当前时刻的allocated_set无需更新
+    if temp_skill_num(skill_cate(pro, act)) >= GlobalSourceRequest(pro, act) %闲置资源满足，可分配，则当前时刻的allocated_set无需更新
         lgs_1 = temp_Lgs(skill_cate(pro, act), :); %????????
         
         for resource = 1:people
@@ -38,12 +38,15 @@ for v = 1:length(cur_conflict) % 閬嶅巻鍐茬獊鍒楄〃涓?姣忎釜鏁扮??
         [B, indexb] = sortrows(A');
         B(:, 2:3) = -B(:, 2:3);
         Maxlgs = B(:, 1)';
-        skill_value = Maxlgs(1, people:end);
-        allocated_resource_num = indexb(people:end);
+        skill_value = Maxlgs(1, people - GlobalSourceRequest(pro, act) + 1:end);
+        allocated_resource_num = indexb(people - GlobalSourceRequest(pro, act) + 1:end);
+        
+        %         skill_value = Maxlgs(1, people:end);
+        %         allocated_resource_num = indexb(people:end);
         
         %当前时刻为请假时刻，对所有活动取unalready_workload计算
-       for order = 1:length(performing_acts_infos)
-        each_performing_act = performing_acts_infos{order};
+        for order = 1:length(performing_acts_infos)
+            each_performing_act = performing_acts_infos{order};
             project_and_activity =  each_performing_act.project_and_activity;
             pro_performing = project_and_activity(1); %项目号
             act_performing = project_and_activity(2); %活动号
@@ -54,7 +57,7 @@ for v = 1:length(cur_conflict) % 閬嶅巻鍐茬獊鍒楄〃涓?姣忎釜鏁扮??
             else
                 temp_d(act, 1, pro) = ceil(GlobalSourceRequest(pro, act) * data_set.d(act, 1, pro) / sum(skill_value)); %不是请假时刻的活动
             end
-       end
+        end
         
         % temp_d(j, 1, i) = ceil((GlobalSourceRequest(i, j) * iter_variables.d(j, 1, i) / sum(skill_number)) * 2) / 2; %姹傝?ユ椿鍔ㄧ殑瀹為檯宸ユ??
         

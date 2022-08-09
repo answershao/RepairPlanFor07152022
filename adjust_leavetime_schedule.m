@@ -5,10 +5,10 @@ function [temp_variables, conflict_acts_info] = adjust_leavetime_schedule(projec
 
     if ~isempty(cur_need_global_activity{1}) %说明leave_time时刻，无闲置资源可分配，需要重新调整活动分配，所以赋值给cur_need_global_activity
         conflict_acts_info{time} = [];
-        slst = find_slst(project_para, data_set, cpm, iter_variables); %找松弛时间
-        [cur_conflict] = find_cur_conflict(data_set, iter_variables, cur_need_global_activity, slst); %softmax评分确定活动执行顺序
+        slst = find_slst(project_para, data_set, cpm, temp_variables); %找松弛时间
+        [cur_conflict] = find_cur_conflict(data_set, temp_variables, cur_need_global_activity, slst); %softmax评分确定活动执行顺序
         %重新调整时与其他活动分配相同
-        [temp_variables, conflict_act_info] = adjust_othertime_allocate_resource(data_set, iter_variables, performing_acts_infos, cur_conflict, time);
+        [temp_variables, conflict_act_info] = adjust_othertime_allocate_resource(data_set, temp_variables, performing_acts_infos, cur_conflict, time);
         %%  局部更新update_clpex_option (优先关系约束及资源约束进行局部更新）
         %6.1  通过紧前活动的最大完成时间--确定未安排活动开始时间
         temp_variables = reschedule_local_time(temp_variables, forward_set, time);

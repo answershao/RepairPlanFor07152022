@@ -21,8 +21,15 @@ forward_set = constant_variables.forward_set;
 
 seq = 0;
 need_global_activity = find_need_global(GlobalSourceRequest);
-
+ index_return=0;%请假员工未返回的标志
+ 
 for time = leave_time:T
+    % 先判断请假员工返回-资源释放，避免内循环人已返回，但外循环人仍处于请假情况
+     if return_time == time 
+         index_return=1;%请假员工已经返回的标志
+        iter_variables.Lgs(:, leave_staff) = data_set.Lgs(1:end, leave_staff);
+        iter_variables.skill_num(1, :) = (sum(iter_variables.Lgs ~= 0, 2))';
+    end
     % 策略一（等待调度）的资源分配，该活动的开始时间便自动更新为请假时刻，方便后续直接引用repair_scheduling
     sprintf('策略一， 前循环:%d-%d', seq + 1, time)
     if time == leave_time
@@ -83,40 +90,48 @@ for time = leave_time:T
         
     end
     
-    % 2.请假员工返回-资源释放
-    if return_time == time + 1
-        %                         time_conflict_acts = conflict_acts_info{time};
-        temp_variables.Lgs(:, leave_staff) = data_set.Lgs(1:end, leave_staff);
-        temp_variables.skill_num(1, :) = (sum(temp_variables.Lgs ~= 0, 2))';
-    end
+%     % 2.请假员工返回-资源释放
+%     if return_time == time + 1
+%         %                         time_conflict_acts = conflict_acts_info{time};
+%         temp_variables.Lgs(:, leave_staff) = data_set.Lgs(1:end, leave_staff);
+%         temp_variables.skill_num(1, :) = (sum(temp_variables.Lgs ~= 0, 2))';
+%     end
     
-    if length(temp_variables.allocated_set) == (num_j * L) || max(max(temp_variables.local_start_times)) <= time
+      finally_start_times = temp_variables.local_start_times - 1;
+    finally_end_times = temp_variables.local_end_times - 1;
+    makespan = max(finally_end_times, [], 2);
+    APD = sum(makespan - ad' - CPM') / L; %1.平均项目延期
+    
+    objective_act = APD + sum(sum(abs(finally_start_times  - (iter_variables.local_start_times-1)))) / L; %修复目标值f1：与活动有关
+    objective_staff = sum(abs(temp_variables.resource_worktime - iter_variables.resource_worktime))/project_para.people; %修复目标值f2：资源工作时间之和偏差，找iter_variables.resource_worktime？
+    objective = (1/2) * objective_act + (1/2) * objective_staff;
+    
+    iter_variables = temp_variables;
+    
+     iter_variables.objective = objective;
+    iter_variables.makespan = makespan;
+    iter_variables.allocated_set = temp_variables.allocated_set;
+    
+    % save 和时间有关系的变量，需要保存
+%      variables_with_time{time+1} = iter_variables;
+     variables_with_time{time} = iter_variables;
+     
+    temp_schedule_solution.conflict_acts_info = conflict_acts_info;
+    temp_schedule_solution.variables_with_time = variables_with_time;
+    
+    
+    if length(temp_variables.allocated_set) == length(need_global_activity)|| max(max(temp_variables.local_start_times)) <= time %活动都分配完了
+%       if     index_return==0%请假员工未返回的标志，找到返回的时刻，更新
+%         iter_variables.Lgs(:, leave_staff) = data_set.Lgs(1:end, leave_staff);
+%         iter_variables.skill_num(1, :) = (sum(iter_variables.Lgs ~= 0, 2))';
+%           variables_with_time{return_time} = iter_variables;
+%       end
         break
     end
     
     % 记录每个时刻剩余的资源序号，该列不全为0的序号为资源序号
     %     unallocated_resource_num = find(sum(iter_variables.Lgs, 1) ~= 0);
-    
-    finally_start_times = temp_variables.local_start_times - 1;
-    finally_end_times = temp_variables.local_end_times - 1;
-    makespan = max(finally_end_times, [], 2);
-    APD = sum(makespan - ad' - CPM') / L; %1.平均项目延期
-    
-    objective_act = APD + sum(sum(abs(temp_variables.local_start_times - iter_variables.local_start_times))) / L; %修复目标值f1：与活动有关
-    objective_staff = sum(sum(abs(temp_variables.resource_worktime - iter_variables.resource_worktime)))/project_para.people; %修复目标值f2：资源工作时间之和偏差，找iter_variables.resource_worktime？
-    objective = (1/2) * objective_act + (1/2) * objective_staff;
-    
-    iter_variables = temp_variables;
-    
-    iter_variables.objective = objective;
-    iter_variables.makespan = makespan;
-    iter_variables.allocated_set = temp_variables.allocated_set;
-    
-    % save 和时间有关系的变量，需要保存
-    variables_with_time{time} = iter_variables;
-    
-    temp_schedule_solution.conflict_acts_info = conflict_acts_info;
-    temp_schedule_solution.variables_with_time = variables_with_time;
+
     toc
     seq = seq + 1;
 end

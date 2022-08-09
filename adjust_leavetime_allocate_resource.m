@@ -27,11 +27,13 @@ function [temp_variables, conflict_acts_info, cur_need_global_activity] = adjust
 
     [~, index_other_staff] = find(timeoff.leave_activity_infos.allocated_resource_num' ~= timeoff.leave_staff);
     other_staff = timeoff.leave_activity_infos.allocated_resource_num(index_other_staff)'; %基线中剩余的员工
-
+ temp_Lgs(:,other_staff)=0;
+     temp_skill_num(1, :) = (sum(temp_Lgs ~= 0, 2))';
+    
     cur_need_global_activity = cell(1, size(performing_acts_infos, 1));
 
     %%  leave_time时刻请假活动先分配资源
-    if iter_variables.skill_num(skill_cate(pro, act)) >= 1 %闲置资源满足，可分配，则当前时刻的allocated_set无需更新
+    if temp_skill_num(skill_cate(pro, act)) >= 1 %闲置资源满足，可分配，则当前时刻的allocated_set无需更新
         lgs_1 = temp_Lgs(skill_cate(pro, act), :); %符合要求的技能值
 
         for resource = 1:people
