@@ -24,12 +24,17 @@ function [temp_variables, conflict_acts_info, cur_need_global_activity] = adjust
     skill_distribution = [];
     resource_serial = [];
     conflict_acts_info = {};
+    % iter_timeoff.leave_activity_infos.allocated_resource_num = timeoff.leave_activity_infos.allocated_resource_num';%横向
+    %     [~, index_other_staff] = find(iter_timeoff.leave_activity_infos.allocated_resource_num ~= timeoff.leave_staff);%如1,3
+    %     other_staff = iter_timeoff.leave_activity_infos.allocated_resource_num(index_other_staff); %基线中剩余的员工
+    %
 
-    [~, index_other_staff] = find(timeoff.leave_activity_infos.allocated_resource_num' ~= timeoff.leave_staff);
-    other_staff = timeoff.leave_activity_infos.allocated_resource_num(index_other_staff)'; %基线中剩余的员工
- temp_Lgs(:,other_staff)=0;
-     temp_skill_num(1, :) = (sum(temp_Lgs ~= 0, 2))';
-    
+    [~, index_other_staff] = find(timeoff.leave_activity_infos.allocated_resource_num ~= timeoff.leave_staff); %如1,3
+    other_staff = timeoff.leave_activity_infos.allocated_resource_num(index_other_staff); %基线中剩余的员工
+
+    temp_Lgs(:, other_staff) = 0;
+    temp_skill_num(1, :) = (sum(temp_Lgs ~= 0, 2))';
+
     cur_need_global_activity = cell(1, size(performing_acts_infos, 1));
 
     %%  leave_time时刻请假活动先分配资源
@@ -91,7 +96,7 @@ function [temp_variables, conflict_acts_info, cur_need_global_activity] = adjust
             temp_local_end_times(pro_performing, act_performing) = temp_local_end_times(pro_performing, act_performing) + gap;
 
             %更新请假时刻的所有在执行的活动工期，请假活动的工期在传之前已经更新了
-            temp_d(act_performing, 1, pro_performing)= each_performing_act.unalready_duration; %员工请假离开后， 活动的剩余工期需要更新
+            temp_d(act_performing, 1, pro_performing) = each_performing_act.unalready_duration; %员工请假离开后， 活动的剩余工期需要更新
 
             %2.闲置资源不足，该时刻所有执行的活动已分配的资源释放
             if pro_performing == pro && act_performing == act %3.1请假活动中除请假人员外的其他人员释放

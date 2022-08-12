@@ -1,4 +1,4 @@
-function [data_set, leave_infos] = read_data(project_para)
+function [data_set, leave_infos] = read_data_instance(project_para)
     global DataSet LeaveInfos
 
     num_j = project_para.num_j;
@@ -47,6 +47,8 @@ function [data_set, leave_infos] = read_data(project_para)
         leave_infos = LeaveInfos;
     end
 
-    people 
-
+    leave_infos.leave_staff = [1, 4];
+    leave_infos.leave_duration = [2, 2];
+    leave_infos.leave_time = [3, 6];
+    leave_infos.return_time = [5, 8];
 end

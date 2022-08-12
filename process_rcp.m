@@ -1,46 +1,48 @@
-function [R, r, d, E] = process_rcp(filepath, resource_cate, num_j)
+function [delay, ad, R, r, d, E] = process_rcp(filepath, resource_cate, num_j)
     %process_rcp 读取rcp文件
     %filepath = 'C:\\Users\\shpf_\\Desktop\\YU\\code\\\Ran\\10-10-0.5-0.5\\Pat1.rcp'
-    re = double(zeros(7, 7)); %预定义矩阵,加快速度 (行：num_j+2,列： resource_cate4+d1+紧后活动个数+紧后活动集合)
+    %re=double(zeros(14,10));  %预定义矩阵,加快速度
+    re = double(zeros(num_j * 2 + 2, 10));
     fid = fopen(filepath); %打开文本文件
     INDEX = 0;
+    count = 1;
 
-    while ~feof(fid)
-        str = fgetl(fid); % 读取一行, str是字符串
+    while ~feof(fid) % 判断是否为文件末尾
+        INDEX = INDEX + 1;
+        str = fgetl(fid); % 从文件读行
 
-        if isempty(str)
-            continue;
+        if INDEX == 15
+            x = str2num(str(1:end));
+            re(count, 1:size(x, 2)) = x;
+            count = count + 1;
         end
 
-        s = regexp(str, '\s+'); % 找出str中的空格, 以空格作为分割数据的字符
-        %s = strsplit(str, ' ');
-        %temp=str2num(str(s(end):end));    %找出最后的数据, 作为保存与否的判断条件
-        %temp=str2num(str(s(20):s(21)));  %找出某个数据, 作为保存与否的判断条件
+        if INDEX >= 19 && INDEX <= 18 + num_j
+            x = str2num(str(1:end));
+            re(count, 1:size(x, 2)) = x;
+            count = count + 1;
+        end
 
-        INDEX = INDEX + 1;
+        if INDEX >= 23 + num_j && INDEX <= 22 + num_j * 2
+            x = str2num(str(1:end));
+            re(count, 1:size(x, 2)) = x;
+            count = count + 1;
+        end
 
-        for i = 1:length(s) % 将字符串全部转为数组, 存于re中
-
-            if i == length(s)
-
-                if str(s(i):end) == ' '
-                    continue;
-                end
-
-                re(INDEX, i) = str2num(str(s(i):end));
-            else
-                re(INDEX, i) = str2num(str(s(i):s(i + 1)));
-            end
-
+        if INDEX == 26 + num_j * 2
+            x = str2num(str(1:end));
+            re(count, 1:size(x, 2)) = x;
+            count = count + 1;
         end
 
     end
 
-    fclose(fid);
+    fclose(fid); %close文本文件
 
-    R = re(2, 1:resource_cate); % 资源可用量
-    r = re(3:end, 2:resource_cate + 1); %资源需求量
-    d = re(3:end, 1); % 活动计划工期
-    E = re(3:end, resource_cate + 3:end); % 紧后活动  ，不够活动数，补齐0
+    delay = re (1, 5); %项目单位延期成本
+    ad = re(1, 3); %项目到达时间
+    R = re(num_j * 2 + 2, 1:resource_cate); % 资源可用量
+    r = re(num_j + 2:2 * num_j + 1, resource_cate:resource_cate + 3); %资源需求量
+    d = re(num_j + 2:2 * num_j + 1, 3); % 活动计划工期
+    E = re(2:num_j + 1, resource_cate:end); % 紧后活动  ，不够活动数，补齐0
     E = [E, zeros(num_j, num_j - 2 - size(E, 2))];
-end

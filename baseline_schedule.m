@@ -28,12 +28,12 @@ function [schedule_solution, constant_variables] = baseline_schedule(project_par
     %% constant_variables
     constant_variables.forward_set = forward_set;
     constant_variables.cpm = cpm;
-    % constant_variables.util_factor = util_factor;
+    constant_variables.util_factor = util_factor;
 
     % global schedule
     [variables_with_time, conflict_acts_info] = global_schedule(project_para, data_set, constant_variables, local_schedule_plan, cycle);
 
-    schedule_solution.variables_with_time = variables_with_time;%所有时刻的活动执行信息
+    schedule_solution.variables_with_time = variables_with_time; %所有时刻的活动执行信息
     schedule_solution.conflict_acts_info = conflict_acts_info;
 
     % schedule_solution.E
