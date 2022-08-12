@@ -9,10 +9,17 @@ clear; clc;
 project_para.cycles = 1; % 10次
 project_para.T = 2000; % 总时间
 
-project_para.num_j = 32; % 总活动数
+alpha = 0;
+strategy = 'dynamic';
+
+% alpha = 0.5;
+% alpha = 1;
+% strategy = "waitfor";
+% strategy = "adjust";
 project_para.L = 2; % 项目数量
-project_para.resource_cate = 4; % 资源种类数,一直不变
+project_para.num_j = 32; % 总活动数
 project_para.skill_count = 3; % 技能种类数
+project_para.resource_cate = 4; % 资源种类数,一直不变
 % project_para.timeoff_level = 1; % 请假时间系数
 % default file readed
 files = 5;
@@ -144,15 +151,29 @@ for cycle = 1:project_para.cycles
 
                     %% 2.1 若闲置资源不可用，则采取动态策略
                     %             %策略一:推至下一时刻继续判断+基线调度计划
-                    [temp_schedule_solution1, objective1] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time));
-                    %                      temp_schedule_solution = temp_schedule_solution1;
-                    % 2.2 策略二:所有活动暂停, 从活动未完成部分开始
-                    [temp_schedule_solution2, objective2] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time));
-                    %                      temp_schedule_solution = temp_schedule_solution2;
-                    if objective1 < objective2
-                        temp_schedule_solution = temp_schedule_solution1;
+
+                    if strategy == "dynamic"
+                        [temp_schedule_solution1, objective1] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha);
+                        %  temp_schedule_solution = temp_schedule_solution1;
+                        % 2.2 策略二:所有活动暂停, 从活动未完成部分开始
+                        [temp_schedule_solution2, objective2] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha);
+                        %   temp_schedule_solution = temp_schedule_solution2;
+                        if objective1 < objective2
+                            temp_schedule_solution = temp_schedule_solution1;
+                        else
+                            temp_schedule_solution = temp_schedule_solution2;
+                        end
+
+                    elseif strategy == "waitfor"
+                        [temp_schedule_solution, objective] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha);
+                    elseif strategy == "adjust"
+                        [temp_schedule_solution, objective] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha);
                     else
-                        temp_schedule_solution = temp_schedule_solution2;
+
+                        while 1
+                            sprintf("Error")
+                        end
+
                     end
 
                     iter_schedule_solution = temp_schedule_solution;
@@ -239,49 +260,8 @@ saved_infos(1, file + 1) = average_objective;
 saved_infos(2, 1:file) = save_cycle_leave_duration;
 saved_infos(2, file + 1) = average_leave_duration;
 saved_infos(3, 1) = average_cpu;
+
+L = project_para.L;
+num_j = project_para.num_j;
 saved_path = strcat('F:\\YuYining\\Code\\results\\', 'j', num2str(num_j - 2), '\\', 'MP', num2str(num_j - 2), '_', num2str(L), '\\', strategy, num2str(alpha));
 save(strcat(saved_path, 'Lgs.mat'), 'saved_infos')
-% 1.2 返回
-%1.是否为返回时间点，更新Lgs，skill_num,save_file_objective save_cycle_objective
-%         [~, index_return] = ismember(time, leave_infos.return_time);
-%
-%         if index_return ~= 0 %说明该time是员工返回时刻
-%             timeoff.return_time = leave_infos.return_time(index_return);
-%             timeoff.return_staff = leave_infos.leave_staff(index_return); %员工的请假和返回，配对出现，即哪个员工走对应矩阵上的哪个员工便在一定时间返回
-%
-%             %遍历找返回时刻的活动信息
-%             for i = 1:length(iter_allocated_acts_information)
-%                 eachtime_act_info = iter_allocated_acts_information{i};
-%
-%                 if eachtime_act_info.performing_time == timeoff.return_time %找到了返回时刻的活动信息
-%                     %员工复职
-%                     eachtime_act_info.Lgs(:, timeoff.return_staff) = data_set.Lgs(1:end, timeoff.return_staff);
-%                     eachtime_act_info.skill_num(1, :) = (sum(eachtime_act_info.Lgs ~= 0, 2))';
-%                     iter_allocated_acts_information{i} = eachtime_act_info;
-%                 end
-%
-%             end
-%
-% 1.更新资源 （判断不同情况）
-%             if isempty(timeoff.leave_activity_infos)%不影响，timeoff.leave_activity_infos是空集合，即在整个项目执行期间，请假员工离开时候均为闲置状态
-%
-%                 eachtime_variables_info.Lgs(:, timeoff.leave_staff) = 0;
-%                 eachtime_variables_info.skill_num = (sum(eachtime_variables_info.Lgs ~= 0, 2))';
-%                 iter_allocated_variables_information{time} = eachtime_variables_info;
-%             else %影响，timeoff.leave_activity_infos非空，判断time和timeoff.leave_time是否相等
-%                 if time ~= timeoff.leave_time  %员工请假时并未执行活动，而是在其返回之前有在执行的活动
-%                     eachtime_variables_info.Lgs(:, timeoff.leave_staff) = 0;
-%                     eachtime_variables_info.skill_num = (sum(eachtime_variables_info.Lgs ~= 0, 2))';
-%                     iter_allocated_variables_information{time} = eachtime_variables_info;
-%                     %         else %员工请假时正在执行活动,就不需要更新资源了，因为分配时已经更新了
-%                 end
-%             end
-
-%      if isempty(performing_acts_infos) %timeoff必为空
-%          if isempty(timeoff) %performing_acts_infos不一定为空
-%          end
-%      end
-
-% %% 3.释放资源，不影响时，无需调度活动，直接判断释放资源
-% iter_allocated_variables_information{timeoff.return_time}.Lgs(:, timeoff.leave_staff) = data_set.Lgs(1:end, timeoff.leave_staff);
-% iter_allocated_variables_information{timeoff.return_time}.skill_num(1, :) = (sum(iter_allocated_variables_information{timeoff.return_time}.Lgs ~= 0, 2))';
