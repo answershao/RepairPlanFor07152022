@@ -55,7 +55,7 @@ function [leave_infos, save_staff_leave_totaltime] = next_leave_infos(project_pa
 
     while leave_time <= save_leave_time
 
-        if lamda < max(lamda, save_leave_time * 0.7)
+        if lamda < max(lamda, save_leave_time * 0.75)
             flag = 0;
             break
         end
