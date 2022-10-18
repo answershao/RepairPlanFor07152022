@@ -1,32 +1,28 @@
-function [data_set, people] = read_data_large(project_para, FileName)
+function [data_set] = read_data_large(project_para, FileName)
 
     num_j = project_para.num_j;
     L = project_para.L;
     resource_cate = project_para.resource_cate;
     skill_count = project_para.skill_count;
+    people = project_para.people;
 
     %1.2 算例参数设置
     %1.3 解析文件夹
     %     for file = 1:5
     %FolderPath = strcat('D:\\科研小强\\SCI\\问题集-mpsplip\\j30\\MP30_2\\mp_j30_a2_nr5');
     %10个活动2，5，10，20项目\\',num2str(L),'-10\\',num2str(L),'-', num2str(OS), '-',num2str(RF), '-',num2str(RS));
-    [people] = process_rcp0(FileName, L);
     %1.4 读取多项目数据
-    delay = zeros(1, L);
-    ad = zeros(1, L);
     R = zeros(1, resource_cate, L); %局部资源可用量
     r = zeros(num_j, resource_cate, L); %局部资源需求量
     d = zeros(num_j, 1, L); %计划工期
     E = zeros(num_j, num_j - 2, L); %紧后活动集合
 
     for i = 1:L
-        [delay1, ad1, R1, r1, d1, E1] = process_rcp(FileName(i, :), resource_cate, num_j); %使用问题库算例时候，数据提取需要补充
+        [R1, r1, d1, E1] = process_rcp(FileName(i, :), resource_cate, num_j); %使用问题库算例时候，数据提取需要补充
         R(:, :, i) = R1; % 第三个维度表示项目数
         r(:, :, i) = r1; % 第三个维度表示项目数
         d(:, :, i) = d1; % 第三个维度表示项目数
         E(:, :, i) = E1;
-        delay(1, i) = delay1;
-        ad(1, i) = ad1;
     end
 
     %% 二.各PA初始化局部调度准备
@@ -107,5 +103,4 @@ function [data_set, people] = read_data_large(project_para, FileName)
     data_set.skill_cate = skill_cate;
     data_set.Lgs = Lgs;
     data_set.original_skill_num = original_skill_num;
-    data_set.ad = ad;
 end

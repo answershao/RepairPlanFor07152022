@@ -17,7 +17,7 @@
 %简化体现在程序中：不考虑周末，一月以工作20天计算，每20天最多4天请假，max(makespan)不足20以20计算，一年以20*12=240计算，240内不超30天
 %2.病假[0.5,10],一个月最多10天，一年不超过15天------如上
 
-function [leave_infos, save_staff_leave_totaltime] = next_leave_infos(project_para, schedule_solution, timeoff, iter_allocated_acts_information, iter_allocated_variables_information, save_leave_time, save_staff_leave_totaltime)
+function [leave_infos, save_staff_leave_totaltime] = next_leave_infos(project_para, timeoff, iter_variables_with_time, iter_allocated_acts_information, iter_allocated_variables_information, save_leave_time, save_staff_leave_totaltime, count)
     save_pro_act_infos = {};
     count = 0;
     resource_serial = [];
@@ -60,9 +60,15 @@ function [leave_infos, save_staff_leave_totaltime] = next_leave_infos(project_pa
             break
         end
 
+        %     if count==0 %说明第一次传，
+        %         rand('seed', 10);
+        %         leave_time = poissrnd(lamda, 1, 1); % 第一个请假时刻进行固定
+        %     else
+        %         leave_time = poissrnd(lamda, 1, 1); % 产生以Lambda为平均值的m行n列Poisson 随机数．
+        %     end
         leave_time = poissrnd(lamda, 1, 1); % 产生以Lambda为平均值的m行n列Poisson 随机数．
 
-        if leave_time > save_leave_time %请假时刻，在前一次请假时刻之后，保证了时间逐渐推移
+        if leave_time > save_leave_time && leave_time <= length(iter_variables_with_time) %请假时刻，在前一次请假时刻之后，保证了时间逐渐推移
             break
         end
 
@@ -74,7 +80,8 @@ function [leave_infos, save_staff_leave_totaltime] = next_leave_infos(project_pa
 
     if flag
         scaned_staffs = zeros(1, project_para.people);
-        baseline_makespan = max(schedule_solution.variables_with_time{length(schedule_solution.variables_with_time)}.makespan);
+        %         baseline_makespan = max(schedule_solution.variables_with_time{length(schedule_solution.variables_with_time)}.makespan);
+        baseline_makespan = max(iter_variables_with_time{length(iter_variables_with_time)}.makespan);
 
         while ~staff_qualified
 
@@ -83,11 +90,17 @@ function [leave_infos, save_staff_leave_totaltime] = next_leave_infos(project_pa
             %             break
             %         end
 
-            if leave_time >= length(schedule_solution.variables_with_time) %请假时刻不能超过基线中最后一个活动的开始分配时刻
+            if leave_time >= length(iter_variables_with_time) %请假时刻不能超过基线中最后一个活动的开始分配时刻
                 break
             end
 
-            leave_staff = randperm(project_para.people, 1); %从原有资源里，随机选择一个为请假员工
+            if count == 0 %说明第一次传，
+                rand('seed', 11);
+                leave_staff = randperm(project_para.people, 1); %从原有资源里，随机选择一个为请假员工
+            else
+                leave_staff = randperm(project_para.people, 1); %从原有资源里，随机选择一个为请假员工
+            end
+
             scaned_staffs(leave_staff) = 1;
 
             % condition1
@@ -96,7 +109,13 @@ function [leave_infos, save_staff_leave_totaltime] = next_leave_infos(project_pa
             if save_staff_leave_totaltime(1, leave_staff) < min ((4 * months), 30)
                 %事假，避免出现0.5，从1开始，方便计算，在1-4内选择1个工期
                 %            leave_duration = randperm(min(4, min(30 - save_staff_leave_totaltime(1, leave_staff), project_para.timeoff_level * baseline_makespan - sum(save_staff_leave_totaltime))), 1);
-                leave_duration = randperm(min(4, min(30 - save_staff_leave_totaltime(1, leave_staff))), 1);
+
+                if count == 0 %说明第一次传，
+                    rand('seed', 12);
+                    leave_duration = randperm(min(4, min(30 - save_staff_leave_totaltime(1, leave_staff))), 1);
+                else
+                    leave_duration = randperm(min(4, min(30 - save_staff_leave_totaltime(1, leave_staff))), 1);
+                end
 
                 %condition2--- if leave_staff 满足条件
                 for i = 1:length(iter_allocated_acts_information)

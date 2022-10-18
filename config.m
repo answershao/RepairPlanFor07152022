@@ -1,12 +1,10 @@
-function [DataSet, project_para] = config(project_para, file)
-    num_j = project_para.num_j;
+function [DataSet, project_para] = config(project_para, OS, RF, RS)
     L = project_para.L;
 
-    DataSetPath = strcat('F:\\YuYining\\Code\\mpsplip_repair\\', 'j', num2str(num_j - 2), '\\', 'MP', num2str(num_j - 2), '_', num2str(L), '\\', 'mp', '_', 'j', num2str(num_j - 2), '_', 'a', num2str(L), '_', 'nr', num2str(file));
+    DataSetPath = strcat('F:\\YuYining\\Code\\DataSet\\RanGenËãÀý¼¯\\', num2str(L), '-10\\', num2str(L), '-', num2str(OS), '-', num2str(RF), '-', num2str(RS));
 
-    FileNames = read_folder(DataSetPath, "sm"); % []
+    FileNames = read_folder(DataSetPath, "rcp"); % []
 
-    [DataSet, people] = read_data_large(project_para, FileNames);
-    project_para.people = people;
+    [DataSet] = read_data_large(project_para, FileNames);
 
 end

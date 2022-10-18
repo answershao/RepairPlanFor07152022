@@ -1,4 +1,4 @@
-function [schedule_solution, constant_variables] = baseline_schedule(project_para, data_set, cycle)
+function [schedule_solution, constant_variables, data_set] = baseline_schedule(project_para, data_set, cycle)
     %baseline_schedule - output Schedule plan
 
     % used parameters
@@ -18,6 +18,12 @@ function [schedule_solution, constant_variables] = baseline_schedule(project_par
 
     % cpm
     cpm = critical_path_methods(project_para, data_set);
+
+    %% 预设到达时间ad
+    ad = zeros(1, L);
+    not_max_index = find(cpm.CPM ~= max(cpm.CPM));
+    ad(not_max_index) = ceil(cpm.CPM(not_max_index) * 0.1);
+    data_set.ad = ad;
 
     % utilization factor 利用系数
     util_factor = cal_utilization_factor(project_para, data_set, cpm);

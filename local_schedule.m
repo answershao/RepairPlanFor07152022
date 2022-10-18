@@ -14,10 +14,10 @@ function [local_schedule_plan] = local_schedule(project_para, data_set)
     for i = 1:L % CPLEX计算
         sprintf('初始局部调度进度:%d / %d', i, L)
         % 有了到达时间应该把调度结果每一行所有元素加上到达时间
-        [start_time, end_time] = genetic_alg(project_para, data_set, i);
+        [start_time, end_time] = cplex(project_para, data_set, i);
 
-        local_start_times(i, :) = start_time + 1;
-        local_end_times(i, :) = end_time + 1;
+        local_start_times(i, :) = start_time;
+        local_end_times(i, :) = end_time;
     end
 
     % realitic_start_times = local_start_times - 1;
