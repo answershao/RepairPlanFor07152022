@@ -45,12 +45,14 @@ function [variables_with_time, conflict_acts_info] = global_schedule(project_par
     variables_with_time = {};
     conflict_acts_info = {};
 
+    objective = 0;
+    makespan = 0;
     for time = 1:T
         sprintf('当前循环:%d-%d-%d', cycle, seq + 1, time)
         %5.3.1  确定当前时刻需要全局资源的冲突活动列表  cur_need_global_activity
         cur_need_global_activity = find_cur_need_global_activity(iter_variables, need_global_activity, time, allocated_set); % 当前时刻需要全局资源的活动
-        %5.3.2  根据cur_need_global_activity确定冲突活动顺序列表
-        %cur_conflict(按照项目权重、活动工期、全局需求量三个优先规则)
+        %5.3.2  根据cur_need_global_activity确定冲突活动顺序列表-基于冲突活动排列机制
+
         if ~isempty(cur_need_global_activity)
             iterations = factorial(length(cur_need_global_activity)); %冲突活动个数的阶乘-基于冲突活动全排列机制
             L3 = cell(min(iterations, max_iteration), length(cur_need_global_activity));
@@ -158,6 +160,12 @@ function [variables_with_time, conflict_acts_info] = global_schedule(project_par
 
             break
         end
+
+        %     if isempty(cur_need_global_activity)
+        %         if length(allocated_set) == length(need_global_activity) || max(max(iter_variables.local_start_times)) <= time
+        %             break
+        %         end
+        %     end
 
         %
         %       if length(allocated_set) == length(need_global_activity)

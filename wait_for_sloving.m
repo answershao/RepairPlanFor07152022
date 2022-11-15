@@ -1,4 +1,4 @@
-function [temp_schedule_solution, objective] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, variables_with_time, conflict_acts_info, alpha)
+function [temp_schedule_solution, objective] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, variables_with_time, conflict_acts_info, alpha,cycle)
     % project_para
     L = project_para.L;
     num_j = project_para.num_j;
@@ -36,7 +36,7 @@ function [temp_schedule_solution, objective] = wait_for_sloving(project_para, da
         end
 
         if time ~= leave_time
-            [temp_variables, conflict_acts_info] = waitfor_othertime_schedule(project_para, data_set, iter_variables, conflict_acts_info, timeoff, forward_set, need_global_activity, cpm, time);
+            [temp_variables, conflict_acts_info] = waitfor_othertime_schedule(project_para, data_set, iter_variables, conflict_acts_info, timeoff, forward_set, need_global_activity,cpm, alpha,cycle,time);
         end
 
         %% 七.资源释放与返工

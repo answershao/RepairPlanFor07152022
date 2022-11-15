@@ -53,6 +53,7 @@ function [leave_infos, save_staff_leave_totaltime] = next_leave_infos(project_pa
 
     flag = 1;
 
+    num_random = 1000;
     while leave_time <= save_leave_time
 
         if lamda < max(lamda, save_leave_time * 0.75)
@@ -67,7 +68,10 @@ function [leave_infos, save_staff_leave_totaltime] = next_leave_infos(project_pa
         %         leave_time = poissrnd(lamda, 1, 1); % 产生以Lambda为平均值的m行n列Poisson 随机数．
         %     end
         leave_time = poissrnd(lamda, 1, 1); % 产生以Lambda为平均值的m行n列Poisson 随机数．
-
+        num_random = num_random - 1;
+        if num_random < 0
+            break
+        end
         if leave_time > save_leave_time && leave_time <= length(iter_variables_with_time) %请假时刻，在前一次请假时刻之后，保证了时间逐渐推移
             break
         end

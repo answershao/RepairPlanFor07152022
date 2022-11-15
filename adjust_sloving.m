@@ -1,4 +1,4 @@
-function [temp_schedule_solution, objective] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, variables_with_time, conflict_acts_info, alpha)
+function [temp_schedule_solution, objective] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, variables_with_time, conflict_acts_info, alpha,cycle)
     % project_para
     L = project_para.L;
     num_j = project_para.num_j;
@@ -32,15 +32,15 @@ function [temp_schedule_solution, objective] = adjust_sloving(project_para, data
             iter_variables.skill_num(1, :) = (sum(iter_variables.Lgs ~= 0, 2))';
         end
 
-        % 策略一（等待调度）的资源分配，该活动的开始时间便自动更新为请假时刻，方便后续直接引用repair_scheduling
+        % 策略二调整策略的资源分配，该活动的开始时间便自动更新为请假时刻，方便后续直接引用repair_scheduling
         sprintf('策略二， 前循环:%d-%d', seq + 1, time)
 
         if time == leave_time
-            [temp_variables, conflict_acts_info] = adjust_leavetime_schedule(project_para, data_set, iter_variables, conflict_acts_info, timeoff, performing_acts_infos, forward_set, cpm, time);
+            [temp_variables, conflict_acts_info] = adjust_leavetime_schedule(project_para, data_set, iter_variables, conflict_acts_info, timeoff, performing_acts_infos, forward_set, cpm, alpha,cycle,time);
         end
 
         if time ~= leave_time
-            [temp_variables, conflict_acts_info] = adjust_othertime_schedule(project_para, data_set, iter_variables, conflict_acts_info, performing_acts_infos, forward_set, need_global_activity, cpm, time);
+            [temp_variables, conflict_acts_info] = adjust_othertime_schedule(project_para, data_set, iter_variables, conflict_acts_info, performing_acts_infos, forward_set, need_global_activity, cpm, alpha,cycle,time);
         end
 
         %% 七.资源释放与返工
