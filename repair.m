@@ -8,32 +8,34 @@ fclose all;
 
 % define num_j, L,
 global global_seed
-project_para.cycles = 3; % 10次
+project_para.cycles = 10; % 10次
 project_para.T = 2000; % 总时间
 
 project_para.L = 2; % 项目数量
 project_para.num_j = 12; % 总活动数
 project_para.skill_count = 3; % 技能种类数
-project_para.people = 10; %L=2,people=5;L=5,people=10;L=10,people=15;
+project_para.people = 5; %L=2,people=5;L=5,people=10;L=10,people=15;
 project_para.resource_cate = 4; % 资源种类数,一直不变
 
 % project_para.timeoff_level = 1; % 请假时间系数
 % default file readed
 files = 27;
 % for OS = 0.25:0.25:0.75
+%for OS = 0.25:0.25:0.75
 for OS = 0.25:0.25:0.75
-    
+
     for RF = 0.25:0.25:0.75
-        
+
         for RS = 0.25:0.25:0.75
-            
+
             saved_infos = zeros(9, 3 * project_para.cycles);
+
             for alpha = 0.3:0.4:0.7
                 %             for alpha = 0:0.5:1
                 sprintf('alpha, %d', alpha)
-                
+
                 for index_strategy = 1:3
-                    
+
                     if index_strategy == 1
                         strategy = 'dynamic';
                     elseif index_strategy == 2
@@ -41,24 +43,24 @@ for OS = 0.25:0.25:0.75
                     elseif index_strategy == 3
                         strategy = "adjust";
                     end
-                    
+
                     sprintf('strategy, %s', strategy)
                     save_cycle_objective = zeros(1, project_para.cycles);
                     save_cycle_leave_level = zeros(1, project_para.cycles);
-                    
+
                     for cycle = 1:project_para.cycles
                         global_seed = str2double(strcat(num2str(project_para.L), num2str(100 * OS), num2str(100 * RF), num2str(100 * RS)));
-                        
+
                         t1 = clock;
-                        
+
                         [data_set, project_para] = config(project_para, OS, RF, RS);
                         % schedule_solution: start_time, end_time, resource_assignment
-                        
+
                         [schedule_solution, constant_variables, data_set] = baseline_schedule(project_para, data_set, cycle);
                         % schedule_solution.variables_with_time = variables_with_time;%所有时刻的活动执行信息
                         % schedule_solution.conflict_acts_info = conflict_acts_info;%每个时刻活动分配资源的信息
                         % constant_variables 基线调度计划中生成的定量，一旦生成均不变
-                        
+
                         %%计算员工工作时间的偏差=修复后每个员工工作时间-修复前每个工作时间
                         % output :
                         %% 分析repair_schedule_plan;
@@ -70,35 +72,35 @@ for OS = 0.25:0.25:0.75
                         %其中，在result中发生变化的是，resource_num、iter_variables、finally_total_duration、APD、 time，且APD的位置应改为修复目标值objective
                         %保持不变的是ad
                         %后续把global_schedule_plan传递给iter_variables,则在iter_variables中继续迭代的是技能值skill_value,资源序号resource_num,结束时间end_times,开始时间start_times,
-                        
+
                         %% 1. 根据第一次请假时刻的信息，资源分配，从而修复，并继续寻找后续的请假时刻
-                        
+
                         % schedule_solution
                         % time开始，所有活动信息 单个活动分配信息
                         % iter_schedule_solution.variables_with_time;%R,d,start,end,APD,makespan, allocated_set
                         % Lgs,skill_num,resource_worktime,skill_value,allocated_resource_num,project_and_activity,start,end,unallocated_resource_num
-                        
+
                         % iter
                         iter_schedule_solution = schedule_solution;
                         % iter_schedule_solution.variables_with_time
                         % iter_schedule_solution.conflict_acts_info
                         iter_schedule_solution.allocated_acts_information = all_act_infos(iter_schedule_solution);
                         iter_schedule_solution.allocated_variables_information = all_variables_infos(iter_schedule_solution);
-                        
+
                         iter_variables_with_time = iter_schedule_solution.variables_with_time;
                         iter_conflict_acts_info = iter_schedule_solution.conflict_acts_info; % 内存储的9个变量+performing_time
                         iter_allocated_acts_information = iter_schedule_solution.allocated_acts_information; %根据活动顺序排的，后需要遍历执行时间
                         iter_allocated_variables_information = iter_schedule_solution.allocated_variables_information; %已根据时间顺序排好了
-                        
+
                         timeoff = {};
                         save_leave_time = 0;
                         save_staff_leave_totaltime = zeros(1, project_para.people); %每个请假人员的请假时间之和
-                        
+
                         %% repair plan
                         leave_infos = {};
                         save_leave_infos = {};
                         count = 0;
-                        
+
                         for time = 1:project_para.T
                             %         % 生成请假员工信息,以上一次调度计划的最大的完工时间为准
                             if isempty(leave_infos)
@@ -106,15 +108,15 @@ for OS = 0.25:0.25:0.75
                                 count = count + 1;
                                 save_leave_infos{count} = leave_infos;
                             end
-                            
+
                             if isempty(leave_infos) %说明这是最后一个请假时刻了，且不符合条件，项目停止
                                 break
                             end
-                            
+
                             % 1 更新资源
                             % 1.1 请假
                             % 是否为请假点 ，先更新Lgs,skill_num, 后续策略中更新allocated_set
-                            
+
                             [~, index_leave] = ismember(time, leave_infos.leave_time);
                             %%  找请假时刻
                             if index_leave ~= 0 %说明该time是请假时刻
@@ -127,34 +129,34 @@ for OS = 0.25:0.25:0.75
                                 %% save请假时刻正在执行的活动信息和请假员工在执行的活动信息
                                 [timeoff, performing_acts_infos] = find_staff_doing_activity(iter_allocated_acts_information, timeoff);
                                 %% 1.更新资源 把请假时间段内的资源全更新
-                                
+
                                 %% 2.重新调度活动
                                 if ~isempty(timeoff.leave_activity_infos) %影响，timeoff.leave_activity_infos不是空集合,则performing_acts_infos也不是空集合
-                                    
+
                                     timeoff = parse_timeoff(data_set, timeoff); %请假时刻请假员工在执行的活动信息
                                     performing_acts_infos = parse_performing_acts(data_set, performing_acts_infos, timeoff);
-                                    
+
                                     pro = timeoff.leave_activity_infos.pro; %员工请假离开后， 活动的剩余工期需要更新
                                     act = timeoff.leave_activity_infos.act;
-                                    
+
                                     % save_leave_pro_and_act{count} = [pro,act];%save每次请假的项目活动序号
                                     save_leave_time = timeoff.leave_time; %save请假时刻,每次都会更新
-                                    
+
                                     if time ~= timeoff.leave_time %员工请假时并未执行活动，而是在其返回之前有在执行的活动
-                                        
+
                                         for order = time:timeoff.leave_time
                                             %存放所有的开始执行时刻
                                             %需更新从time到leave_time 所有时刻信息
                                             iter_variables_with_time{order}.Lgs(:, timeoff.leave_staff) = 0;
                                             iter_variables_with_time{order}.skill_num = (sum(iter_variables_with_time{order}.Lgs ~= 0, 2))';
                                         end
-                                        
+
                                         %存放所有的开始执行时刻+直到活动结束时刻为止，即+最后一个活动分配完后到最后一个活动结束为止的所有时段
                                         %只需更新leave_time时刻
                                         iter_allocated_variables_information{timeoff.leave_time}.Lgs(:, timeoff.leave_staff) = 0;
                                         iter_allocated_variables_information{timeoff.leave_time}.skill_num = (sum(iter_allocated_variables_information{timeoff.leave_time}.Lgs ~= 0, 2))';
                                     end
-                                    
+
                                     iter_variables.R = iter_allocated_variables_information{timeoff.leave_time}.R;
                                     iter_allocated_variables_information{timeoff.leave_time}.d(act, :, pro) = timeoff.leave_activity_infos.unalready_duration;
                                     iter_variables.d = iter_allocated_variables_information{timeoff.leave_time}.d; %员工请假离开后， 活动的剩余工期需要更新
@@ -166,10 +168,10 @@ for OS = 0.25:0.25:0.75
                                     iter_variables.Lgs = iter_allocated_variables_information{timeoff.leave_time}.Lgs;
                                     iter_variables.skill_num = iter_allocated_variables_information{timeoff.leave_time}.skill_num; %技能可用量
                                     iter_variables.resource_worktime = iter_allocated_variables_information{timeoff.leave_time}.resource_worktime;
-                                    
+
                                     %% 2.1 若闲置资源不可用，则采取动态策略
                                     %             %策略一:推至下一时刻继续判断+基线调度计划
-                                    
+
                                     if strategy == "dynamic"
                                         %                                             if timeoff.leave_time > length(iter_variables_with_time)
                                         %                                                 a = 1;
@@ -184,24 +186,24 @@ for OS = 0.25:0.25:0.75
                                         else
                                             temp_schedule_solution = temp_schedule_solution2;
                                         end
-                                        
+
                                     elseif strategy == "waitfor"
                                         [temp_schedule_solution, objective] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha, cycle);
                                     elseif strategy == "adjust"
                                         [temp_schedule_solution, objective] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha, cycle);
                                     else
-                                        
+
                                         while 1
                                             sprintf("Error")
                                         end
-                                        
+
                                     end
-                                    
+
                                     iter_schedule_solution = temp_schedule_solution;
-                                    
+
                                     iter_schedule_solution.allocated_acts_information = all_act_infos(iter_schedule_solution);
                                     iter_schedule_solution.allocated_variables_information = all_variables_infos(iter_schedule_solution);
-                                    
+
                                     iter_variables_with_time = iter_schedule_solution.variables_with_time;
                                     iter_conflict_acts_info = iter_schedule_solution.conflict_acts_info; % 内存储的9个变量+performing_time
                                     iter_allocated_acts_information = iter_schedule_solution.allocated_acts_information; %根据活动顺序排的，后需要遍历执行时间
@@ -210,7 +212,7 @@ for OS = 0.25:0.25:0.75
                                     %% 员工请假对调度不影响，需更新资源和释放资源
                                     %1.更新iter_variables_with_time
                                     if length(iter_variables_with_time) < timeoff.return_time
-                                        
+
                                         for order = time:length(iter_variables_with_time)
                                             %存放所有的开始执行时刻
                                             %需更新从time到return_time-1
@@ -218,9 +220,9 @@ for OS = 0.25:0.25:0.75
                                             iter_variables_with_time{order}.Lgs(:, timeoff.leave_staff) = 0;
                                             iter_variables_with_time{order}.skill_num = (sum(iter_variables_with_time{order}.Lgs ~= 0, 2))';
                                         end
-                                        
+
                                     elseif timeoff.return_time <= length(iter_variables_with_time)
-                                        
+
                                         for order = time:timeoff.return_time - 1
                                             %存放所有的开始执行时刻
                                             %需更新从time到return_time-1
@@ -228,9 +230,9 @@ for OS = 0.25:0.25:0.75
                                             iter_variables_with_time{order}.Lgs(:, timeoff.leave_staff) = 0;
                                             iter_variables_with_time{order}.skill_num = (sum(iter_variables_with_time{order}.Lgs ~= 0, 2))';
                                         end
-                                        
+
                                     end
-                                    
+
                                     %2.更新iter_allocated_variables_information
                                     if length(iter_allocated_variables_information) < timeoff.return_time
                                         %需更新从time到return_time-1 所有时刻信息
@@ -238,35 +240,36 @@ for OS = 0.25:0.25:0.75
                                             iter_allocated_variables_information{order}.Lgs(:, timeoff.leave_staff) = 0;
                                             iter_allocated_variables_information{order}.skill_num = (sum(iter_allocated_variables_information{order}.Lgs ~= 0, 2))';
                                         end
-                                        
+
                                     elseif timeoff.return_time <= length(iter_allocated_variables_information)
-                                        
+
                                         for order = time:timeoff.return_time - 1
                                             iter_allocated_variables_information{order}.Lgs(:, timeoff.leave_staff) = 0;
                                             iter_allocated_variables_information{order}.skill_num = (sum(iter_allocated_variables_information{order}.Lgs ~= 0, 2))';
                                         end
-                                        
+
                                     end
-                                    
+
                                 end
-                                
+
                             end
-                            
+
                         end
-                        
+
                         save_cycle_objective(cycle) = iter_allocated_variables_information{length(iter_allocated_variables_information)}.objective;
                         save_cycle_leave_level(cycle) = sum(save_staff_leave_totaltime) / max(schedule_solution.variables_with_time{length(schedule_solution.variables_with_time)}.makespan);
                     end
-                    
+
                     cycles = project_para.cycles;
-                    
+
                     average_cpu = etime(clock, t1) / cycles;
-                    if mod(alpha - 0.3 ,  0.4 ) == 0
-                        save_index = ceil(3* (alpha - 0.3 ) / 0.4 + index_strategy);
+
+                    if mod(alpha - 0.3, 0.4) == 0
+                        save_index = ceil(3 * (alpha - 0.3) / 0.4 + index_strategy);
                     else
                         save_index = 3 * (2 * alpha) + index_strategy;
                     end
-    
+
                     saved_infos(save_index, 1) = alpha;
                     saved_infos(save_index, 2) = index_strategy;
                     saved_infos(save_index, 3) = average_cpu;
@@ -274,18 +277,18 @@ for OS = 0.25:0.25:0.75
                     saved_infos(save_index, 5) = sum(save_cycle_leave_level) / cycles;
                     saved_infos(save_index, 6:5 + cycles) = save_cycle_objective;
                     saved_infos(save_index, 6 + cycles:5 + cycles * 2) = save_cycle_leave_level;
-                    
+
                 end
-                
+
             end
-            
+
             L = project_para.L;
             num_j = project_para.num_j;
             saved_path = strcat('F:\\YuYining\\Code\\OutputSet\\MS-DRCMPSP-StaffLeave\\rangen\\', num2str(L), '-10\\', num2str(OS), '-', num2str(RF), '-', num2str(RS), '.mat');
             save(saved_path, 'saved_infos');
             fclose all;
         end
-        
+
     end
-    
+
 end

@@ -1,4 +1,4 @@
-function [temp_schedule_solution, objective] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, variables_with_time, conflict_acts_info, alpha,cycle)
+function [temp_schedule_solution, objective] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, variables_with_time, conflict_acts_info, alpha, cycle)
     % project_para
     L = project_para.L;
     num_j = project_para.num_j;
@@ -36,7 +36,7 @@ function [temp_schedule_solution, objective] = wait_for_sloving(project_para, da
         end
 
         if time ~= leave_time
-            [temp_variables, conflict_acts_info] = waitfor_othertime_schedule(project_para, data_set, iter_variables, conflict_acts_info, timeoff, forward_set, need_global_activity,cpm, alpha,cycle,time);
+            [temp_variables, conflict_acts_info] = waitfor_othertime_schedule(project_para, data_set, iter_variables, conflict_acts_info, timeoff, forward_set, need_global_activity, cpm, alpha, cycle, time);
         end
 
         %% 七.资源释放与返工
@@ -102,9 +102,11 @@ function [temp_schedule_solution, objective] = wait_for_sloving(project_para, da
         makespan = max(finally_end_times, [], 2);
         APD = sum(makespan - ad' - CPM') / L; %1.平均项目延期
 
-        objective_act = APD + sum(sum(abs(finally_start_times - (iter_variables.local_start_times - 1)))) / L; %修复目标值f1：与活动有关
-        objective_staff = sum(abs(temp_variables.resource_worktime - iter_variables.resource_worktime)) / project_para.people; %修复目标值f2：资源工作时间之和偏差，找iter_variables.resource_worktime？
-        objective = alpha * objective_act + (1 - alpha) * objective_staff;
+        objective_act = abs(APD - iter_variables.objective);
+        objective_start_time = sum(sum(abs(finally_start_times - (iter_variables.local_start_times - 1)))) / L; %修复目标值f1：与活动有关
+        objective = alpha * objective_act + (1 - alpha) * objective_start_time;
+        % objective_staff = sum(abs(temp_variables.resource_worktime - iter_variables.resource_worktime)) / project_para.people; %修复目标值f2：资源工作时间之和偏差，找iter_variables.resource_worktime？
+        % objective = alpha * objective_act + (1 - alpha) * objective_staff;
 
         iter_variables = temp_variables;
 
