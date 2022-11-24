@@ -44,7 +44,9 @@ function [variables_with_time, conflict_acts_info] = global_schedule(project_par
     allocated_set = {}; % 承载已经分配资源的活动
     variables_with_time = {};
     conflict_acts_info = {};
-
+    
+    objective = 0;
+    makespan = 0;
     for time = 1:T
         sprintf('当前循环:%d-%d-%d', cycle, seq + 1, time)
         %5.3.1  确定当前时刻需要全局资源的冲突活动列表  cur_need_global_activity
