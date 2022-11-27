@@ -11,10 +11,10 @@ global global_seed
 project_para.cycles = 10; % 10次
 project_para.T = 2000; % 总时间
 
-project_para.L = 5; % 项目数量
+project_para.L = 10; % 项目数量
 project_para.num_j = 12; % 总活动数
-project_para.skill_count = 4; % 技能种类数
-project_para.people = 8; %L=2,people=5;L=5,people=10;L=10,people=15;
+project_para.skill_count = 5; % 技能种类数
+project_para.people = 10; %L=2,people=5;L=5,people=10;L=10,people=15;
 project_para.resource_cate = 4; % 资源种类数,一直不变
 
 % project_para.timeoff_level = 1; % 请假时间系数
