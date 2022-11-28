@@ -11,10 +11,10 @@ global global_seed
 project_para.cycles = 10; % 10次
 project_para.T = 2000; % 总时间
 
-project_para.L = 10; % 项目数量
+project_para.L = 2; % 项目数量
 project_para.num_j = 12; % 总活动数
-project_para.skill_count = 5; % 技能种类数
-project_para.people = 10; %L=2,people=5;L=5,people=10;L=10,people=15;
+project_para.skill_count = 3; % 技能种类数
+project_para.people = 5; %L=2,people=5;L=5,people=10;L=10,people=15;
 project_para.resource_cate = 4; % 资源种类数,一直不变
 
 % project_para.timeoff_level = 1; % 请假时间系数
@@ -293,7 +293,7 @@ for OS = 0.5
 
             L = project_para.L;
             num_j = project_para.num_j;
-            saved_path = strcat('F:\\YuYining\\Code\\UncertainResources_06262022\\RepairPlan-RanGen算例\\data\\', num2str(L), '-10\\', num2str(OS), '-', num2str(RF), '-', num2str(RS), '.mat');
+            saved_path = strcat('D:\\科研小强\\NO5-开源论文分析\\活动排列机制的反应型调度-活动目标\\code\\RP-cplex-rangen-基线排列-修复LFT-活动目标\\data\\', num2str(L), '-10\\', num2str(OS), '-', num2str(RF), '-', num2str(RS), '.mat');
             save(saved_path, 'saved_infos');
             fclose all;
         end
