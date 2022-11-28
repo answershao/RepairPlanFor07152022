@@ -3,11 +3,11 @@ function [temp_variables, conflict_acts_info] = adjust_othertime_schedule(projec
     %5.3.1  确定当前时刻需要全局资源的冲突活动列表  cur_need_global_activity
     cur_need_global_activity = find_cur_need_global_activity(iter_variables, need_global_activity, time, iter_variables.allocated_set); % 当前时刻需要全局资源的活动
     % slst = find_slst(project_para, data_set, cpm, iter_variables); %找松弛时间
-    lft = find_lft(project_para, data_set, cpm, iter_variables); %找最晚结束时间
+    lst = find_lst(project_para, data_set, cpm, iter_variables); %找最晚开始时间
     %5.3.2  根据cur_need_global_activity确定冲突活动顺序列表
     %cur_conflict(按照项目权重、活动工期、全局需求量三个优先规则)
     if ~isempty(cur_need_global_activity)
-        [cur_conflict] = find_cur_conflict(data_set, iter_variables, cur_need_global_activity, lft);
+        [cur_conflict] = find_cur_conflict(data_set, iter_variables, cur_need_global_activity, lst);
         [temp_variables, conflict_act_info] = adjust_othertime_allocate_resource(data_set, iter_variables, performing_acts_infos, cur_conflict, time);
         %%  局部更新update_clpex_option (优先关系约束及资源约束进行局部更新）
         %6.1  通过紧前活动的最大完成时间--确定未安排活动开始时间
