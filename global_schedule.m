@@ -26,13 +26,13 @@ function [variables_with_time, conflict_acts_info] = global_schedule(project_par
     iter_variables.local_end_times = local_schedule_plan.local_end_times; % 初始局部结束时间
 
     %与资源技能相关的
-     iter_variables.Lgs = data_set.Lgs;
+    iter_variables.Lgs = data_set.Lgs;
     iter_variables.skill_num = data_set.original_skill_num; %技能可用量
     iter_variables.resource_worktime = zeros(1, people);
-%    
-%     conflict_act.Lgs = data_set.Lgs;
-%     conflict_act.skill_num = data_set.original_skill_num; %技能可用量
-%     conflict_act.resource_worktime = zeros(1, people);
+    %
+    %     conflict_act.Lgs = data_set.Lgs;
+    %     conflict_act.skill_num = data_set.original_skill_num; %技能可用量
+    %     conflict_act.resource_worktime = zeros(1, people);
 
     % 寻找全局资源活动列表need_global_activity
     need_global_activity = find_need_global(GlobalSourceRequest);
@@ -52,9 +52,9 @@ function [variables_with_time, conflict_acts_info] = global_schedule(project_par
         %cur_conflict(按照项目权重、活动工期、全局需求量三个优先规则)
         if ~isempty(cur_need_global_activity)
 
-            [cur_conflict] = find_cur_conflict(data_set, iter_variables, cur_need_global_activity, slst);
+            [cur_conflict] = find_cur_conflict_baseline(data_set, iter_variables, cur_need_global_activity, slst);
             %5.3.3  指派资源allocate_source
-            [temp_variables, conflict_act_info] = allocate_source(data_set, iter_variables,  cur_conflict, time);
+            [temp_variables, conflict_act_info] = allocate_source(data_set, iter_variables, cur_conflict, time);
             %% 六. 局部更新update_clpex_option (优先关系约束及资源约束进行局部更新）
             %6.1  通过紧前活动的最大完成时间--确定未安排活动开始时间
             temp_variables = reschedule_local_time(temp_variables, forward_set, time);
@@ -116,9 +116,9 @@ function [variables_with_time, conflict_acts_info] = global_schedule(project_par
                 end
 
                 % 记录每个时刻剩余的资源序号，该列不全为0的序号为资源序号
-%                 unallocated_resource_num = find(sum(iter_variables.Lgs, 1) ~= 0);
-%                 temp.unallocated_resource_num = unallocated_resource_num;
-%                 temp0{j} = temp;
+                %                 unallocated_resource_num = find(sum(iter_variables.Lgs, 1) ~= 0);
+                %                 temp.unallocated_resource_num = unallocated_resource_num;
+                %                 temp0{j} = temp;
                 conflict_acts_info{i} = temp0;
 
             end
@@ -128,7 +128,7 @@ function [variables_with_time, conflict_acts_info] = global_schedule(project_par
         iter_variables.objective = objective;
         iter_variables.makespan = makespan;
         iter_variables.allocated_set = allocated_set;
-        
+
         % save 和时间有关系的变量，需要保存
         variables_with_time{time} = iter_variables;
 

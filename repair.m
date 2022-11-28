@@ -8,9 +8,9 @@ fclose all;
 
 % define num_j, L,
 project_para.cycles = 10; % 10次
-project_para.T = 3000; % 总时间
+project_para.T = 2000; % 总时间
 
-project_para.L = 2; % 项目数量
+project_para.L = 10; % 项目数量
 project_para.num_j = 92; % 总活动数
 project_para.skill_count = 4; % 技能种类数
 project_para.resource_cate = 4; % 资源种类数,一直不变
@@ -22,11 +22,12 @@ save_cycle_objective = zeros(project_para.cycles, files); %file=5
 save_file_leave_level = [];
 save_cycle_leave_duration = zeros(project_para.cycles, files);
 
-
-for alpha = 0:0.5:1
+%  for alpha = 0:0.5:1
+for alpha = 1
     sprintf('alpha, %d', alpha)
 
-    for index_strategy = 1:3
+    %     for index_strategy = 1:3
+    for index_strategy = 1
 
         if index_strategy == 1
             strategy = 'dynamic';
@@ -272,7 +273,7 @@ for alpha = 0:0.5:1
 
         L = project_para.L;
         num_j = project_para.num_j;
-        saved_path = strcat('F:\\YuYining\\Code\\UncertainResources_06262022\\results\\', 'j', num2str(num_j - 2), '\\', 'MP', num2str(num_j - 2), '_', num2str(L), '\\', strategy, num2str(alpha), '.mat');
+        saved_path = strcat('F:\\YuYining\\Code\\UncertainResources_06262022\\RepairPlan-mpsplib算例\\随机\\', 'j', num2str(num_j - 2), '\\', 'MP', num2str(num_j - 2), '_', num2str(L), '\\', strategy, num2str(alpha), '.mat');
         save(saved_path, 'saved_infos');
         fclose all;
     end
