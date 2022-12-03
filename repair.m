@@ -7,12 +7,13 @@ fclose all;
 % 5. 否,方案一,等待下一时刻继续判断
 
 % define num_j, L,
-project_para.cycles = 10; % 10次
+global max_iteration
+project_para.cycles = 1; % 10次
 project_para.T = 2000; % 总时间
-
-project_para.L = 10; % 项目数量
-project_para.num_j = 92; % 总活动数
-project_para.skill_count = 4; % 技能种类数
+max_iteration = 20;
+project_para.L = 2; % 项目数量
+project_para.num_j = 32; % 总活动数
+project_para.skill_count = 3; % 技能种类数
 project_para.resource_cate = 4; % 资源种类数,一直不变
 % project_para.timeoff_level = 1; % 请假时间系数
 % default file readed
@@ -165,10 +166,10 @@ for alpha = 1
                             %             %策略一:推至下一时刻继续判断+基线调度计划
 
                             if strategy == "dynamic"
-                                [temp_schedule_solution1, objective1] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha);
+                                [temp_schedule_solution1, objective1] = wait_for_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha, cycle);
                                 %  temp_schedule_solution = temp_schedule_solution1;
                                 % 2.2 策略二:所有活动暂停, 从活动未完成部分开始
-                                [temp_schedule_solution2, objective2] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha);
+                                [temp_schedule_solution2, objective2] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, iter_variables_with_time(1:timeoff.leave_time), iter_conflict_acts_info(1:timeoff.leave_time), alpha, cycle);
                                 %   temp_schedule_solution = temp_schedule_solution2;
                                 if objective1 < objective2
                                     temp_schedule_solution = temp_schedule_solution1;
@@ -273,7 +274,7 @@ for alpha = 1
 
         L = project_para.L;
         num_j = project_para.num_j;
-        saved_path = strcat('F:\\YuYining\\Code\\UncertainResources_06262022\\RepairPlan-mpsplib算例\\随机\\', 'j', num2str(num_j - 2), '\\', 'MP', num2str(num_j - 2), '_', num2str(L), '\\', strategy, num2str(alpha), '.mat');
+        saved_path = strcat('F:\\YuYining\\Code\\UncertainResources_06262022\\RepairPlan-mpsplib算例\\排列\\', 'j', num2str(num_j - 2), '\\', 'MP', num2str(num_j - 2), '_', num2str(L), '\\', strategy, num2str(alpha), '.mat');
         save(saved_path, 'saved_infos');
         fclose all;
     end

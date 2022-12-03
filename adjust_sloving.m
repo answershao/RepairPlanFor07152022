@@ -1,4 +1,4 @@
-function [temp_schedule_solution, objective] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, variables_with_time, conflict_acts_info, alpha)
+function [temp_schedule_solution, objective] = adjust_sloving(project_para, data_set, constant_variables, iter_variables, timeoff, performing_acts_infos, variables_with_time, conflict_acts_info, alpha, cycle)
     % project_para
     L = project_para.L;
     num_j = project_para.num_j;
@@ -36,11 +36,13 @@ function [temp_schedule_solution, objective] = adjust_sloving(project_para, data
         sprintf('策略二， 前循环:%d-%d', seq + 1, time)
 
         if time == leave_time
-            [temp_variables, conflict_acts_info] = adjust_leavetime_schedule(project_para, data_set, iter_variables, conflict_acts_info, timeoff, performing_acts_infos, forward_set, cpm, time);
+            [temp_variables, conflict_acts_info] = adjust_leavetime_schedule(project_para, data_set, iter_variables, conflict_acts_info, timeoff, performing_acts_infos, forward_set, cpm, alpha, cycle, time);
+            % [temp_variables, conflict_acts_info] = adjust_leavetime_schedule(project_para, data_set, iter_variables, conflict_acts_info, timeoff, performing_acts_infos, forward_set, cpm, time);
         end
 
         if time ~= leave_time
-            [temp_variables, conflict_acts_info] = adjust_othertime_schedule(project_para, data_set, iter_variables, conflict_acts_info, performing_acts_infos, forward_set, need_global_activity, cpm, time);
+            [temp_variables, conflict_acts_info] = adjust_othertime_schedule(project_para, data_set, iter_variables, conflict_acts_info, performing_acts_infos, forward_set, need_global_activity, cpm, alpha, cycle, time);
+            % [temp_variables, conflict_acts_info] = adjust_othertime_schedule(project_para, data_set, iter_variables, conflict_acts_info, performing_acts_infos, forward_set, need_global_activity, cpm, time);
         end
 
         %% 七.资源释放与返工

@@ -52,7 +52,7 @@ function [variables_with_time, conflict_acts_info] = global_schedule(project_par
         %cur_conflict(按照项目权重、活动工期、全局需求量三个优先规则)
         if ~isempty(cur_need_global_activity)
 
-            [cur_conflict] = find_cur_conflict_baseline(data_set, iter_variables, cur_need_global_activity, slst);
+            [cur_conflict] = find_cur_conflict(data_set, iter_variables, cur_need_global_activity, slst);
             %5.3.3  指派资源allocate_source
             [temp_variables, conflict_act_info] = allocate_source(data_set, iter_variables, cur_conflict, time);
             %% 六. 局部更新update_clpex_option (优先关系约束及资源约束进行局部更新）
