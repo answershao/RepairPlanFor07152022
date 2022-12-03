@@ -5,8 +5,8 @@ function [temp_variables, conflict_acts_info] = adjust_leavetime_schedule(projec
 
     if ~isempty(cur_need_global_activity{1}) %说明leave_time时刻，无闲置资源可分配，需要重新调整活动分配，所以赋值给cur_need_global_activity
         conflict_acts_info{time} = [];
-        lft = find_lft(project_para, data_set, cpm, iter_variables); %最晚开始时间
-        [cur_conflict] = find_cur_conflict_repair(data_set, temp_variables, cur_need_global_activity, lft); %softmax评分确定活动执行顺序
+        lst = find_lst(project_para, data_set, cpm, iter_variables); %最晚开始时间
+        [cur_conflict] = find_cur_conflict_repair(data_set, temp_variables, cur_need_global_activity, lst); %softmax评分确定活动执行顺序
         %重新调整时与其他活动分配相同
         [temp_variables, conflict_act_info] = adjust_othertime_allocate_resource(data_set, temp_variables, performing_acts_infos, cur_conflict, time);
         %%  局部更新update_clpex_option (优先关系约束及资源约束进行局部更新）

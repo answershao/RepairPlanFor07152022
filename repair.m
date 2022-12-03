@@ -273,7 +273,7 @@ for alpha = 1
 
         L = project_para.L;
         num_j = project_para.num_j;
-        saved_path = strcat('F:\\YuYining\\Code\\UncertainResources_06262022\\RepairPlan-mpsplibËãÀı\\LFT\\', 'j', num2str(num_j - 2), '\\', 'MP', num2str(num_j - 2), '_', num2str(L), '\\', strategy, num2str(alpha), '.mat');
+        saved_path = strcat('F:\\YuYining\\Code\\UncertainResources_06262022\\RepairPlan-mpsplibËãÀı\\LST\\', 'j', num2str(num_j - 2), '\\', 'MP', num2str(num_j - 2), '_', num2str(L), '\\', strategy, num2str(alpha), '.mat');
         save(saved_path, 'saved_infos');
         fclose all;
     end
