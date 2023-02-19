@@ -8,7 +8,7 @@ fclose all;
 
 % define num_j, L,
 global global_seed
-project_para.cycles = 10; % 10次
+project_para.cycles = 2; % 10次
 project_para.T = 2000; % 总时间
 
 project_para.L = 2; % 项目数量
@@ -293,7 +293,7 @@ for OS = 0.5
 
             L = project_para.L;
             num_j = project_para.num_j;
-            saved_path = strcat('D:\\科研小强\\NO5-开源论文分析\\活动排列机制的反应型调度-活动目标\\code\\RP-cplex-rangen-基线排列-修复LFT-活动目标\\data\\', num2str(L), '-10\\', num2str(OS), '-', num2str(RF), '-', num2str(RS), '.mat');
+            saved_path = strcat('F:\\YuYining\\Code\\UncertainResources_06262022\\RepairPlan-RanGen算例\\修复SLST\\', num2str(L), '-10\\', num2str(OS), '-', num2str(RF), '-', num2str(RS), '.mat');
             save(saved_path, 'saved_infos');
             fclose all;
         end
