@@ -47,10 +47,10 @@ for time = leave_time+1:T
         finally_end_times = temp_variables.local_end_times - 1;
         makespan = max(finally_end_times, [], 2);
         APD = sum(makespan - ad' - CPM') / L; %1.平均项目延期
-        
-        objective_act = APD + abs(finally_start_times - iter_variables.local_start_times) / L; %修复目标值f1：与活动有关
-        objective_staff = abs(iter_variables.resource_worktime - temp_variables.resource_worktime); %修复目标值f2：资源工作时间之和偏差，找iter_variables.resource_worktime？
-        objective = (1/2) * objective_act + (1/2) * objective_staff;
+
+        objective_act = abs(APD - iter_variables.objective);
+        objective_start_time = sum(sum(abs(finally_start_times - (iter_variables.local_start_times - 1)))) / L; %修复目标值f1：与活动有关
+        objective = alpha * objective_act + (1 - alpha) * objective_start_time;
         
         %6.3  传递
         

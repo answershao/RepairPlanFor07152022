@@ -102,9 +102,9 @@ function [temp_schedule_solution, objective] = wait_for_sloving(project_para, da
         makespan = max(finally_end_times, [], 2);
         APD = sum(makespan - ad' - CPM') / L; %1.平均项目延期
 
-        objective_act = APD + sum(sum(abs(finally_start_times - (iter_variables.local_start_times - 1)))) / L; %修复目标值f1：与活动有关
-        objective_staff = sum(abs(temp_variables.resource_worktime - iter_variables.resource_worktime)) / project_para.people; %修复目标值f2：资源工作时间之和偏差，找iter_variables.resource_worktime？
-        objective = alpha * objective_act + (1 - alpha) * objective_staff;
+        objective_act = abs(APD - iter_variables.objective);
+        objective_start_time = sum(sum(abs(finally_start_times - (iter_variables.local_start_times - 1)))) / L; %修复目标值f1：与活动有关
+        objective = alpha * objective_act + (1 - alpha) * objective_start_time;
 
         iter_variables = temp_variables;
 
